@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🎯 CSS Class Finder - GUI</h1>
+  <h1> <img src="src-tauri/app-icon.png" width="64" height="64">CSS Class Finder - GUI</h1>
   <p><strong>A beautiful desktop application for finding unused CSS classes in your project directories</strong></p>
   
   <p>
