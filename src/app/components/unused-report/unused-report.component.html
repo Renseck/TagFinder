@@ -1,0 +1,47 @@
+<div class="unused-tags-container" *ngIf="report">
+    <h2>Unused CSS Classes Results</h2>
+    
+    <div class="summary">
+    <div class="stats-grid">
+        <div class="stat-item">
+        <span class="stat-value">{{ report.total_classes }}</span>
+        <span class="stat-label">Total Classes</span>
+        </div>
+        <div class="stat-item">
+        <span class="stat-value">{{ report.unused_classes.length }}</span>
+        <span class="stat-label">Unused Classes</span>
+        </div>
+        <div class="stat-item">
+        <span class="stat-value">{{ report.used_classes.length }}</span>
+        <span class="stat-label">Used Classes</span>
+        </div>
+        <div class="stat-item">
+        <span class="stat-value">{{ getFilesWithUnused().length }}</span>
+        <span class="stat-label">Files with Unused</span>
+        </div>
+    </div>
+    </div>
+    
+    <div class="file-results" *ngIf="getFilesWithUnused().length > 0">
+    <div class="file-group" *ngFor="let filePath of getFilesWithUnused()">
+        <div class="file-header" (click)="toggleFile(filePath)">
+        <span class="toggle-icon">{{ isFileExpanded(filePath) ? '▼' : '▶' }}</span>
+        <span class="file-name">{{ getFileName(filePath) }}</span>
+        <span class="tag-count">({{ getUnusedClassesForFile(filePath).length }} unused)</span>
+        </div>
+        
+        <div class="file-content" *ngIf="isFileExpanded(filePath)">
+        <div class="classes-list">
+            <div class="class-item" *ngFor="let unusedClass of getUnusedClassesForFile(filePath)">
+            <code>.{{ unusedClass.class.name }}</code>
+            <span class="line-info">line {{ unusedClass.class.line }}</span>
+            </div>
+        </div>
+        </div>
+    </div>
+    </div>
+    
+    <div class="no-results" *ngIf="getFilesWithUnused().length === 0">
+    <p>🎉 No unused CSS classes found! Your project is clean.</p>
+    </div>
+</div>

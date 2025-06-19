@@ -1,0 +1,45 @@
+<div class="scan-results-container" *ngIf="result">
+    <h2>Word Search Results for "{{ searchWord }}"</h2>
+    
+    <div class="summary">
+    <div class="stats-grid">
+        <div class="stat-item">
+        <span class="stat-value">{{ getTotalMatches() }}</span>
+        <span class="stat-label">Total Files</span>
+        </div>
+        <div class="stat-item">
+        <span class="stat-value">{{ result.css_files.length }}</span>
+        <span class="stat-label">CSS Files</span>
+        </div>
+        <div class="stat-item">
+        <span class="stat-value">{{ result.other_files.length }}</span>
+        <span class="stat-label">Other Files</span>
+        </div>
+        <div class="stat-item" [class.warning]="result.is_css_only">
+        <span class="stat-value">{{ result.is_css_only ? 'YES' : 'NO' }}</span>
+        <span class="stat-label">CSS Only</span>
+        </div>
+    </div>
+    <div class="css-only-warning" *ngIf="result.is_css_only">
+        ⚠️ This word appears only in CSS files - it might be unused!
+    </div>
+    </div>
+    
+    <div class="file-results" *ngIf="getAllFiles().length > 0">
+    <div class="file-group" *ngFor="let filePath of getAllFiles()">
+        <div class="file-header">
+        <span class="file-type-icon" [class.css-file]="getFileType(filePath) === 'css'">
+            {{ getFileType(filePath) === 'css' ? '🎨' : '📄' }}
+        </span>
+        <span class="file-name">{{ getFileName(filePath) }}</span>
+        <span class="file-type-badge" [class.css-badge]="getFileType(filePath) === 'css'">
+            {{ getFileType(filePath).toUpperCase() }}
+        </span>
+        </div>
+    </div>
+    </div>
+    
+    <div class="no-results" *ngIf="getAllFiles().length === 0">
+    <p>No matches found for "{{ searchWord }}"</p>
+    </div>
+</div>

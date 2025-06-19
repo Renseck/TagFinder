@@ -1,0 +1,64 @@
+<main class="container">
+      <header>
+        <h1>CSS Tag Finder</h1>
+        <p>Find unused CSS tags and search for specific words in your project</p>
+      </header>
+
+      <app-directory-selector (directorySelected)="onDirectorySelected($event)"></app-directory-selector>
+
+      <section class="actions-section">
+        <div class="action-group">
+          <h3>Find Unused CSS Classes</h3>
+          <button 
+            (click)="findUnusedCssTags()" 
+            [disabled]="!selectedDirectory || loading"
+            class="action-btn primary"
+          >
+            {{ loading && currentAction === 'unused' ? 'Scanning...' : 'Find Unused CSS Classes' }}
+          </button>
+        </div>
+
+        <div class="action-group">
+          <h3>Search for Word</h3>
+          <div class="word-search">
+            <input 
+              type="text" 
+              [(ngModel)]="searchWord" 
+              placeholder="Enter word to search..."
+              (keyup.enter)="findWordInFiles()"
+            />
+            <button 
+              (click)="findWordInFiles()" 
+              [disabled]="!selectedDirectory || !searchWord || loading"
+              class="action-btn secondary"
+            >
+              {{ loading && currentAction === 'word' ? 'Searching...' : 'Search' }}
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="results-section" *ngIf="showResults">
+        <app-unused-report
+          *ngIf="unusedResults" 
+          [report]="unusedResults">
+        </app-unused-report>
+
+        <app-scan-results 
+          *ngIf="wordResults" 
+          [result]="wordResults" 
+          [searchWord]="searchWord">
+        </app-scan-results>
+      </section>
+
+      <div class="loading" *ngIf="loading">
+        <div class="spinner"></div>
+        <p>{{ currentAction === 'unused' ? 'Scanning for unused CSS classes...' : 'Searching for word...' }}</p>
+      </div>
+
+      <div class="error" *ngIf="errorMessage">
+        <h3>Error</h3>
+        <p>{{ errorMessage }}</p>
+        <button (click)="clearError()" class="clear-error-btn">Dismiss</button>
+      </div>
+    </main>

@@ -1,0 +1,169 @@
+.directory-section {
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #2c3e50;
+}
+
+.directory-picker {
+    display: flex;
+    gap: 0.5rem;
+    align-items: stretch;
+}
+
+.directory-picker input {
+  flex: 1;
+  padding: 0.75rem;
+  border: 2px solid #e1e8ed;
+  border-radius: 8px;
+  font-size: 1rem;
+  background-color: #f8f9fa;
+  transition: border-color 0.3s;
+}
+
+.directory-picker input.has-value {
+  border-color: #27ae60;
+  background-color: #f0fff4;
+}
+
+.button-group {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.browse-btn {
+  padding: 0.75rem 1.5rem;
+  background: #3498db;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+  white-space: nowrap;
+  min-width: 100px;
+}
+
+.browse-btn:hover:not(:disabled) {
+  background: #2980b9;
+  transform: translateY(-1px);
+}
+
+.browse-btn:disabled {
+  background: #bdc3c7;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.clear-btn {
+  padding: 0.75rem;
+  background: #e74c3c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: all 0.3s;
+  width: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.clear-btn:hover {
+  background: #c0392b;
+  transform: translateY(-1px);
+}
+
+.directory-info {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #e8f5e8;
+  border-radius: 6px;
+  border-left: 3px solid #27ae60;
+}
+
+.directory-info small {
+  color: #2d5a2d;
+  font-weight: 500;
+}
+
+.error-message {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: #fff3cd;
+  border-radius: 6px;
+  border-left: 3px solid #ffc107;
+}
+
+.error-message small {
+  color: #856404;
+  font-weight: 500;
+}
+
+/* Loading animation for the selecting state */
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.browse-btn:disabled span {
+  animation: rotate 1s linear infinite;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .directory-picker {
+    flex-direction: column;
+  }
+  
+  .button-group {
+    align-self: stretch;
+  }
+  
+  .browse-btn {
+    flex: 1;
+  }
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .directory-section {
+    background: #3a3a3a;
+  }
+  
+  .input-group label {
+    color: #f6f6f6;
+  }
+  
+  .directory-picker input {
+    background: #4a4a4a;
+    border-color: #6a6a6a;
+    color: #f6f6f6;
+  }
+  
+  .directory-picker input.has-value {
+    background: #2d4a2d;
+    border-color: #27ae60;
+  }
+  
+  .directory-info {
+    background: #2d4a2d;
+  }
+  
+  .directory-info small {
+    color: #a8e6a8;
+  }
+}
