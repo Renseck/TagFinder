@@ -1,8 +1,9 @@
 .directory-section {
     margin-bottom: 2rem;
     padding: 1.5rem;
-    background: white;
+    background: var(--surface-color);
     border-radius: 12px;
+    border: 1px solid var(--border-color);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -10,7 +11,7 @@
     display: block;
     margin-bottom: 0.5rem;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-color);
 }
 
 .directory-picker {
@@ -20,18 +21,19 @@
 }
 
 .directory-picker input {
+  font-size: 1rem;
+  color: var(--text-color);
   flex: 1;
   padding: 0.75rem;
-  border: 2px solid #e1e8ed;
+  border: 2px solid var(--border-color);
   border-radius: 8px;
-  font-size: 1rem;
-  background-color: #f8f9fa;
+  background-color: var(--surface-color);
   transition: border-color 0.3s;
 }
 
 .directory-picker input.has-value {
   border-color: #27ae60;
-  background-color: #f0fff4;
+  background-color: var(--surface-color);
 }
 
 .button-group {
@@ -107,6 +109,24 @@
 .error-message small {
   color: #856404;
   font-weight: 500;
+}
+
+/* Dark theme overrides */
+:host-context(.dark-theme) .directory-info {
+  background: #2d4a2d;
+}
+
+:host-context(.dark-theme) .directory-info small {
+  color: #a8e6a8;
+}
+
+:host-context(.dark-theme) .error-message {
+  background: #4a3a2d;
+  border-color: #ffc107;
+}
+
+:host-context(.dark-theme) .error-message small {
+  color: #f1c40f;
 }
 
 /* Loading animation for the selecting state */

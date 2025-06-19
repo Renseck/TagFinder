@@ -1,21 +1,23 @@
 .scan-results-container {
-    background: white;
+    background: var(--surface-color);
     border-radius: 12px;
+    border: 1px solid var(--border-color);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
 }
 
 h2 {
-    color: #2c3e50;
+    color: var(--text-color);
     margin: 0 0 1rem 0;
-    border-bottom: 2px solid #ecf0f1;
+    border-bottom: 2px solid var(--border-color);
     padding-bottom: 0.5rem;
 }
 
 .summary {
-    background: #ecf0f1;
+    background: var(--bg-color);
     padding: 1rem;
     border-radius: 8px;
+    border: 1px solid var(--border-color);
     margin-bottom: 1.5rem;
 }
 
@@ -28,16 +30,17 @@ h2 {
 
 .stat-item {
     text-align: center;
-    background: white;
+    background: var(--surface-color);
     padding: 1rem;
     border-radius: 8px;
+    border: 1px solid var(--border-color);
 }
 
 .stat-value {
     display: block;
     font-size: 1.5rem;
     font-weight: bold;
-    color: #2c3e50;
+    color: var(--text-color);
 }
 
 .stat-label {
@@ -62,7 +65,7 @@ h2 {
 
 .file-group {
     margin-bottom: 0.5rem;
-    border: 1px solid #e1e8ed;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
 }
@@ -71,7 +74,7 @@ h2 {
     display: flex;
     align-items: center;
     padding: 1rem;
-    background: #f8f9fa;
+    background: var(--bg-color);
 }
 
 .file-type-icon {
@@ -82,7 +85,7 @@ h2 {
 .file-name {
     flex: 1;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-color);
 }
 
 .file-type-badge {
@@ -103,4 +106,11 @@ h2 {
     color: #6c757d;
     font-style: italic;
     padding: 2rem;
+}
+
+/* Dark theme overrides */
+:host-context(.dark-theme) .css-only-warning {
+    background: #4a3a2d;
+    border-color: #ffc107;
+    color: #f1c40f;
 }

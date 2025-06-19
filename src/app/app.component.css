@@ -3,29 +3,41 @@
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
-  color: #0f0f0f;
-  background-color: #f6f6f6;
+  color: var(--text-color);
+  background-color: var(--bg-color);
 }
 
 .container {
   max-width: 1200px;
   margin: 0 auto;
   padding: 2rem;
+  background-color: var(--bg-color);
 }
 
-header {
-  text-align: center;
+.app-toolbar {
+  background: var(--surface-color) !important;
+  color: var(--text-color) !important;
+  border-bottom: 1px solid var(--border-color);
   margin-bottom: 2rem;
 }
 
-header h1 {
-  color: #2c3e50;
-  margin-bottom: 0.5rem;
+.toolbar-spacer {
+  flex: 1 1 auto;
 }
 
-header p {
+.theme-toggle {
+  color: var(--text-color) !important;
+}
+
+.content {
+  padding: 0 2rem 2rem;
+}
+
+.app-description {
+  text-align: center;
   color: #7f8c8d;
   font-size: 1.1rem;
+  margin-bottom: 2rem;
 }
 
 /* Actions Section */
@@ -38,14 +50,15 @@ header p {
 
 .action-group {
   padding: 1.5rem;
-  background: white;
+  background: var(--surface-color);
   border-radius: 12px;
+  border: 1px solid var(--border-color);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .action-group h3 {
   margin: 0 0 1rem 0;
-  color: #2c3e50;
+  color: var(--text-color);
   font-size: 1.2rem;
 }
 
@@ -91,10 +104,12 @@ header p {
 
 .word-search input {
   flex: 1;
-  padding: 0.5rem;
-  border: 2px solid #e1e8ed;
-  border-radius: 6px;
   font-size: 0.9rem;
+  color: var(--text-color);
+  padding: 0.5rem;
+  border: 2px solid var(--border-color);
+  border-radius: 6px;
+  background-color: var(--surface-color);
 }
 
 .word-search button {
@@ -109,14 +124,16 @@ header p {
 /* Loading */
 .loading {
   text-align: center;
+  color: var(--text-color);
   padding: 2rem;
-  background: white;
-  border-radius: 12px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  background: var(--surface-color);
+  border-radius: 12px;
+  border: 1px solid var(--border-color);
 }
 
 .spinner {
-  border: 3px solid #f3f3f3;
+  border: 3px solid var(--border-color);
   border-top: 3px solid #3498db;
   border-radius: 50%;
   width: 40px;
@@ -154,9 +171,20 @@ header p {
   margin-top: 0.5rem;
 }
 
+/* Dark theme overrides */
+.dark-theme .error {
+  background: #4a1a1a;
+  border-color: #6d2626;
+  color: #ff6b6b;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .actions-section {
     grid-template-columns: 1fr;
+  }
+
+  .app-toolbar h1 {
+    font-size: 1.2rem;
   }
 }

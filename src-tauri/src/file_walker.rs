@@ -1,5 +1,5 @@
-use walkdir::WalkDir;
 use std::path::{Path, PathBuf};
+use walkdir::WalkDir;
 
 pub struct FileWalker {
     directory: String,
@@ -45,7 +45,7 @@ impl FileWalker {
 
         Ok(results)
     }
-    
+
     /* ========================================================================================== */
     pub fn with_extensions(mut self, extensions: Vec<&str>) -> Self {
         // Lifetime shittery so do it this way

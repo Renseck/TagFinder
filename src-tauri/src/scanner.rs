@@ -18,7 +18,7 @@ impl FileScanner {
     pub fn new(target_word: String, directory: String) -> Self {
         Self {
             target_word,
-            directory
+            directory,
         }
     }
 
@@ -27,7 +27,7 @@ impl FileScanner {
         let walker = FileWalker::new(self.directory.clone());
         let files_with_content = walker.walk_with_content()?;
         let processor = TextProcessor::new();
-        
+
         let mut css_files = Vec::new();
         let mut other_files = Vec::new();
 
@@ -35,7 +35,7 @@ impl FileScanner {
             if processor.find_exact_words(&content, &self.target_word) {
                 let file_path_str = file_path.to_string_lossy().to_string();
                 let extension = file_path.extension().and_then(|ext| ext.to_str());
-                
+
                 match extension {
                     Some("css") | Some("scss") => css_files.push(file_path_str),
                     _ => other_files.push(file_path_str),
@@ -51,5 +51,4 @@ impl FileScanner {
             is_css_only,
         })
     }
-
 }

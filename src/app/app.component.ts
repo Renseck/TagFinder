@@ -1,12 +1,17 @@
-import { Component } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { invoke } from "@tauri-apps/api/core";
+import { MatIconModule } from '@angular/material/icon';
+import { MatButtonModule } from '@angular/material/button';
+import { MatToolbarModule } from '@angular/material/toolbar';
+import { Subject, takeUntil } from 'rxjs';
 
 import { DirectorySelectorComponent } from './components/directory-selector/directory-selector.component';
 import { UnusedReportComponent, UnusedReport } from './components/unused-report/unused-report.component';
 import { ScanResultsComponent, ScanResult } from './components/scan-results/scan-results.component';
+import { ThemesService } from './services/themes/themes.service';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +20,9 @@ import { ScanResultsComponent, ScanResult } from './components/scan-results/scan
     CommonModule,
     RouterOutlet,
     FormsModule,
+    MatIconModule,
+    MatButtonModule,
+    MatToolbarModule,
     DirectorySelectorComponent,
     UnusedReportComponent,
     ScanResultsComponent
@@ -22,19 +30,42 @@ import { ScanResultsComponent, ScanResult } from './components/scan-results/scan
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
-export class AppComponent {
+export class AppComponent implements OnInit, OnDestroy {
   selectedDirectory = "";
   searchWord = "";
   loading = false;
   currentAction: "unused" | "word" | "" = "";
   showResults = false;
   errorMessage = "";
+  isDarkMode = false;
 
   unusedResults: UnusedReport | null = null;
   wordResults: ScanResult | null = null;
 
   expandedFiles = new Set<string>();
+  private destroy$ = new Subject<void>();
 
+  /* ============================================================================================ */
+  constructor(private themeService: ThemesService) {}
+
+  /* ======================================== ng funtions ======================================= */
+  ngOnInit(): void {
+      this.themeService.isDarkMode$
+        .pipe(takeUntil(this.destroy$))
+        .subscribe(isDark => {
+          this.isDarkMode = isDark;
+        })
+  }
+
+  ngOnDestroy(): void {
+      this.destroy$.next();
+      this.destroy$.complete();
+  }
+
+  /* ============================================================================================ */
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
+  }
   /* ============================================================================================ */
   onDirectorySelected(directory: string): void {
     this.selectedDirectory = directory;

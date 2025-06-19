@@ -1,21 +1,23 @@
 .unused-tags-container {
-    background: white;
+    background: var(--surface-color);
     border-radius: 12px;
+    border: 1px solid var(--border-color);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
     padding: 1.5rem;
 }
 
 h2 {
-    color: #2c3e50;
+    color: var(--text-color);
     margin: 0 0 1rem 0;
-    border-bottom: 2px solid #ecf0f1;
+    border-bottom: 2px solid var(--border-color);
     padding-bottom: 0.5rem;
 }
 
 .summary {
-    background: #ecf0f1;
+    background: var(--bg-color);
     padding: 1rem;
     border-radius: 8px;
+    border: 1px solid var(--border-color);
     margin-bottom: 1.5rem;
 }
 
@@ -27,16 +29,17 @@ h2 {
 
 .stat-item {
     text-align: center;
-    background: white;
+    background: var(--surface-color);
     padding: 1rem;
     border-radius: 8px;
+    border: 1px solid var(--border-color);
 }
 
 .stat-value {
     display: block;
     font-size: 1.5rem;
     font-weight: bold;
-    color: #2c3e50;
+    color: var(--text-color);
 }
 
 .stat-label {
@@ -48,7 +51,7 @@ h2 {
 
 .file-group {
     margin-bottom: 1rem;
-    border: 1px solid #e1e8ed;
+    border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
 }
@@ -57,9 +60,10 @@ h2 {
     display: flex;
     align-items: center;
     padding: 1rem;
-    background: #f8f9fa;
+    background: var(--bg-color);
     cursor: pointer;
     transition: background-color 0.3s;
+    border-bottom: 1px solid var(--border-color);
 }
 
 .file-header:hover {
@@ -75,7 +79,7 @@ h2 {
 .file-name {
     flex: 1;
     font-weight: 600;
-    color: #2c3e50;
+    color: var(--text-color);
 }
 
 .tag-count {
@@ -85,7 +89,7 @@ h2 {
 
 .file-content {
     padding: 1rem;
-    background: white;
+    background: var(--surface-color);
 }
 
 .classes-list {
@@ -120,4 +124,14 @@ h2 {
     color: #6c757d;
     font-style: italic;
     padding: 2rem;
+}
+
+/* Dark theme overrides */
+:host-context(.dark-theme) .class-item {
+    background: #4a1a1a;
+    border-color: #6d2626;
+}
+
+:host-context(.dark-theme) .class-item code {
+    color: #ff6b6b;
 }

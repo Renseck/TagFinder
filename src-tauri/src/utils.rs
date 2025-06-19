@@ -3,12 +3,12 @@ use std::path::Path;
 
 /* ============================================================================================== */
 pub fn print_header_line(width: usize) {
-    println!("{spacer:=>width$}", spacer="=", width = width);
+    println!("{spacer:=>width$}", spacer = "=", width = width);
 }
 
 /* ============================================================================================== */
 pub fn print_section_line(width: usize) {
-    println!("{spacer:->width$}", spacer="-", width = width);
+    println!("{spacer:->width$}", spacer = "-", width = width);
 }
 
 /* ============================================================================================== */
@@ -18,7 +18,7 @@ pub fn print_banner(banner_file: Option<&str>) {
         Some(file_path) => read_banner_from_file(file_path),
         None => read_banner_from_file("banner.txt"),
     };
-    
+
     match banner_content {
         Ok(content) => {
             println!("{}", content);
@@ -37,21 +37,23 @@ fn read_banner_from_file(file_path: &str) -> Result<String, Box<dyn std::error::
     if !Path::new(file_path).exists() {
         return Err("Banner file not found".into());
     }
-    
+
     let content = fs::read_to_string(file_path)?;
-    Ok(content.trim_end().to_string()) 
+    Ok(content.trim_end().to_string())
 }
 
 /* ============================================================================================== */
 fn print_default_banner() {
-    println!(r#"
+    println!(
+        r#"
 ╔════════════════════════════════════════════════════════╗
 ║                    🎯 TAG FINDER 🎯                    ║
 ║                                                        ║
 ║            Find unused CSS classes and tags            ║
 ║              Clean up your codebase! 🧹               ║
 ╚════════════════════════════════════════════════════════╝
-    "#);
+    "#
+    );
     print_section_line(60);
 }
 
