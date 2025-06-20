@@ -36,7 +36,7 @@ async fn analyze_directory_gui(
     directory: &str,
 ) -> Result<UnusedReport, Box<dyn std::error::Error>> {
     let detector = UnusedDetector::new(directory.to_string());
-    detector.generate_report()
+    detector.generate_report_parallel()
 }
 
 /* ============================================================================================== */
@@ -45,7 +45,7 @@ async fn find_word_gui(
     directory: &str,
 ) -> Result<ScanResult, Box<dyn std::error::Error>> {
     let scanner = FileScanner::new(word.to_string(), directory.to_string());
-    scanner.scan()
+    scanner.scan_parallel()
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]

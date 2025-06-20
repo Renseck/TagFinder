@@ -20,11 +20,7 @@ impl TextProcessor {
     }
 
     /* ========================================================================================== */
-    pub fn add_pattern(
-        mut self,
-        name: &str,
-        pattern: &str,
-    ) -> Result<Self, Box<dyn std::error::Error>> {
+    pub fn add_pattern(mut self, name: &str, pattern: &str) -> Result<Self, Box<dyn std::error::Error>> {
         let regex = Regex::new(pattern)?;
         self.patterns.push((name.to_string(), regex));
         Ok(self)
@@ -33,12 +29,12 @@ impl TextProcessor {
     /* ========================================================================================== */
     pub fn process_content(&self, content: &str) -> Vec<TextMatch> {
         let mut matches = Vec::new();
-
+        
         for (line_num, line) in content.lines().enumerate() {
             if self.is_ignored_line(line) {
                 continue;
             }
-
+            
             for (pattern_name, regex) in &self.patterns {
                 for cap in regex.captures_iter(line) {
                     if let Some(matched) = cap.get(1) {
@@ -52,7 +48,7 @@ impl TextProcessor {
                 }
             }
         }
-
+        
         matches
     }
 

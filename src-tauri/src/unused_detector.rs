@@ -1,13 +1,17 @@
 use crate::css_parser::{CssClass, CssParser};
-use crate::scanner::FileScanner;
 use crate::{print_header_line, print_section_line};
-use serde::{Deserialize, Serialize};
+use crate::scanner::FileScanner;
 use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
+use rayon::prelude::*;
+use std::sync::{Arc, Mutex};
+
 pub struct UnusedDetector {
     directory: String,
+    thread_count: Option<usize>,
 }
 
-#[derive(Debug, Serialize, Deserialize)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct UnusedClass {
     pub class: CssClass,
     pub is_unused: bool,
@@ -23,14 +27,36 @@ pub struct UnusedReport {
 
 impl UnusedDetector {
     pub fn new(directory: String) -> Self {
-        Self { directory }
+        Self { 
+            directory,
+            thread_count: None,
+        }
+    }
+
+    /* ========================================================================================== */
+    pub fn with_thread_count(mut self, count: usize) -> Self {
+        self.thread_count = Some(count);
+        self
     }
 
     /* ========================================================================================== */
     pub fn generate_report(&self) -> Result<UnusedReport, Box<dyn std::error::Error>> {
         let classes = self.extract_all_classes()?;
         let (unused_classes, used_classes, by_file) = self.analyze_class_usage(&classes)?;
+        
+        Ok(UnusedReport {
+            total_classes: classes.len(),
+            unused_classes,
+            used_classes,
+            by_file,
+        })
+    }
 
+    /* ========================================================================================== */
+    pub fn generate_report_parallel(&self) -> Result<UnusedReport, Box<dyn std::error::Error>> {
+        let classes = self.extract_all_classes_parallel()?;
+        let (unused_classes, used_classes, by_file) = self.analyze_class_usage_parallel(&classes)?;
+        
         Ok(UnusedReport {
             total_classes: classes.len(),
             unused_classes,
@@ -49,59 +75,137 @@ impl UnusedDetector {
     }
     /* ========================================================================================== */
 
+    fn extract_all_classes_parallel(&self) -> Result<Vec<CssClass>, Box<dyn std::error::Error>> {
+        println!("🔍 Extracting CSS classes...");
+        let css_parser = CssParser::new(self.directory.clone())
+            .with_thread_count(self.thread_count.unwrap_or(num_cpus::get()));
+        let classes = css_parser.extract_classes_parallel()?;
+        println!("📊 Found {} CSS classes. Checking usage...", classes.len());
+        Ok(classes)
+    }
+    /* ========================================================================================== */
+
+
     fn analyze_class_usage(
         &self,
         classes: &[CssClass],
-    ) -> Result<
-        (
-            Vec<CssClass>,
-            Vec<CssClass>,
-            HashMap<String, Vec<UnusedClass>>,
-        ),
-        Box<dyn std::error::Error>,
-    > {
+    ) -> Result<(Vec<CssClass>, Vec<CssClass>, HashMap<String, Vec<UnusedClass>>), Box<dyn std::error::Error>> {
         let mut unused_classes = Vec::new();
         let mut used_classes = Vec::new();
         let mut by_file: HashMap<String, Vec<UnusedClass>> = HashMap::new();
-
+        
         for (i, class) in classes.iter().enumerate() {
             self.print_progress(i, classes.len());
-
+            
             let is_unused = self.is_class_unused(class)?;
             let unused_class = UnusedClass {
                 class: class.clone(),
                 is_unused,
             };
-
+            
             by_file
                 .entry(class.file.clone())
                 .or_default()
                 .push(unused_class);
-
+            
             if is_unused {
                 unused_classes.push(class.clone());
             } else {
                 used_classes.push(class.clone());
             }
         }
-
+        
         println!("✅ Analysis complete!");
         Ok((unused_classes, used_classes, by_file))
     }
-    /* ========================================================================================== */
 
+    /* ========================================================================================== */
+    fn analyze_class_usage_parallel(
+        &self,
+        classes: &[CssClass],
+    ) -> Result<(Vec<CssClass>, Vec<CssClass>, HashMap<String, Vec<UnusedClass>>), Box<dyn std::error::Error>> {
+        
+        let progress_counter = Arc::new(Mutex::new(0usize));
+        let total = classes.len();
+        
+        // Configure thread pool
+        let pool = match self.thread_count {
+            Some(count) => rayon::ThreadPoolBuilder::new().num_threads(count).build()?,
+            None => rayon::ThreadPoolBuilder::new().build()?,
+        };
+
+        println!("🔍 Analyzing {} classes using {} threads...", total, pool.current_num_threads());
+
+        let results: Result<Vec<_>, Box<dyn std::error::Error + Send + Sync>> = pool.install(|| {
+            classes
+                .par_iter()
+                .map(|class| -> Result<UnusedClass, Box<dyn std::error::Error + Send + Sync>> {
+                    // Update progress
+                    {
+                        let mut counter = progress_counter.lock().unwrap();
+                        *counter += 1;
+                        if *counter % 25 == 0 {
+                            println!("   Processed {}/{} classes...", *counter, total);
+                        }
+                    }
+
+                    let is_unused = self.is_class_unused_sync(class)?;
+                    Ok(UnusedClass {
+                        class: class.clone(),
+                        is_unused,
+                    })
+                })
+                .collect()
+        });
+
+        let unused_classes_results = results.map_err(|e| -> Box<dyn std::error::Error> { 
+            Box::new(std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))
+        })?;
+        
+        // Process results
+        let mut unused_classes = Vec::new();
+        let mut used_classes = Vec::new();
+        let mut by_file: HashMap<String, Vec<UnusedClass>> = HashMap::new();
+        
+        for unused_class in unused_classes_results {
+            by_file
+                .entry(unused_class.class.file.clone())
+                .or_default()
+                .push(unused_class.clone());
+            
+            if unused_class.is_unused {
+                unused_classes.push(unused_class.class);
+            } else {
+                used_classes.push(unused_class.class);
+            }
+        }
+        
+        println!("✅ Analysis complete!");
+        Ok((unused_classes, used_classes, by_file))
+    }
+
+    /* ========================================================================================== */
     fn is_class_unused(&self, class: &CssClass) -> Result<bool, Box<dyn std::error::Error>> {
         let scanner = FileScanner::new(class.name.clone(), self.directory.clone());
         let result = scanner.scan()?;
         Ok(result.is_css_only)
     }
-    /* ========================================================================================== */
 
+    /* ========================================================================================== */
+    fn is_class_unused_sync(&self, class: &CssClass) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+        let scanner = FileScanner::new(class.name.clone(), self.directory.clone());
+        let result = scanner.scan()
+            .map_err(|e| format!("Scanner error: {}", e))?;
+        Ok(result.is_css_only)
+    }
+
+    /* ========================================================================================== */
     fn print_progress(&self, current: usize, total: usize) {
         if current % 10 == 0 && current > 0 {
             println!("   Processed {}/{} classes...", current, total);
         }
     }
+    
     /* ========================================================================================== */
 }
 
@@ -112,24 +216,24 @@ impl UnusedReport {
         println!("Total classes analyzed: {}", self.total_classes);
         println!("Unused classes: {}", self.unused_classes.len());
         println!("Used classes: {}", self.used_classes.len());
-
+        
         if self.total_classes > 0 {
             let percentage = (self.unused_classes.len() as f64 / self.total_classes as f64) * 100.0;
             println!("Unused percentage: {:.1}%", percentage);
         }
     }
     /* ========================================================================================== */
-
+    
     pub fn print_detailed(&self) {
         self.print_summary();
-
+        
         if self.unused_classes.is_empty() {
             return;
         }
-
+        
         println!("\n🗑️  UNUSED CLASSES:");
         print_section_line(30);
-
+        
         self.print_unused_classes_by_file();
         println!("\n💡 TIP: Review these unused classes and consider removing them to clean up your CSS.");
     }
@@ -139,10 +243,10 @@ impl UnusedReport {
         self.print_summary();
         println!("\n📁 BY FILE BREAKDOWN:");
         print_section_line(40);
-
+        
         let mut files: Vec<_> = self.by_file.keys().collect();
         files.sort();
-
+        
         for file in files {
             self.print_file_breakdown(file);
         }
@@ -152,14 +256,14 @@ impl UnusedReport {
     fn print_unused_classes_by_file(&self) {
         let mut files: Vec<_> = self.by_file.keys().collect();
         files.sort();
-
+        
         for file in files {
             let unused_in_file = self.get_unused_classes_in_file(file);
-
+            
             if unused_in_file.is_empty() {
                 continue;
             }
-
+            
             println!("\n📁 {}:", file);
             for unused in unused_in_file {
                 println!("   .{} (line {})", unused.class.name, unused.class.line);
@@ -172,19 +276,15 @@ impl UnusedReport {
         let classes = &self.by_file[file];
         let unused_count = classes.iter().filter(|c| c.is_unused).count();
         let total_count = classes.len();
-
+        
         println!("\n{}", file);
-        println!(
-            "  Total: {}, Unused: {}, Used: {}",
-            total_count,
-            unused_count,
-            total_count - unused_count
-        );
-
+        println!("  Total: {}, Unused: {}, Used: {}", 
+            total_count, unused_count, total_count - unused_count);
+        
         if unused_count == 0 {
             return;
         }
-
+        
         println!("  Unused classes:");
         for class in classes.iter().filter(|c| c.is_unused) {
             println!("    .{} (line {})", class.class.name, class.class.line);
@@ -193,7 +293,10 @@ impl UnusedReport {
     /* ========================================================================================== */
 
     fn get_unused_classes_in_file(&self, file: &str) -> Vec<&UnusedClass> {
-        self.by_file[file].iter().filter(|c| c.is_unused).collect()
+        self.by_file[file]
+            .iter()
+            .filter(|c| c.is_unused)
+            .collect()
     }
     /* ========================================================================================== */
 }
