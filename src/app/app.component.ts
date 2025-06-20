@@ -1,6 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet } from '@angular/router';
 import { FormsModule } from '@angular/forms';
 import { invoke } from "@tauri-apps/api/core";
 import { MatIconModule } from '@angular/material/icon';
@@ -11,6 +10,7 @@ import { Subject, takeUntil } from 'rxjs';
 import { DirectorySelectorComponent } from './components/directory-selector/directory-selector.component';
 import { UnusedReportComponent, UnusedReport } from './components/unused-report/unused-report.component';
 import { ScanResultsComponent, ScanResult } from './components/scan-results/scan-results.component';
+import { FooterComponent } from './components/footer/footer.component';
 import { ThemesService } from './services/themes/themes.service';
 
 @Component({
@@ -18,14 +18,14 @@ import { ThemesService } from './services/themes/themes.service';
   standalone: true,
   imports: [
     CommonModule,
-    RouterOutlet,
     FormsModule,
     MatIconModule,
     MatButtonModule,
     MatToolbarModule,
     DirectorySelectorComponent,
     UnusedReportComponent,
-    ScanResultsComponent
+    ScanResultsComponent,
+    FooterComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'

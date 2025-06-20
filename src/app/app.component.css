@@ -40,7 +40,7 @@
   margin-bottom: 2rem;
 }
 
-/* Actions Section */
+ /* ====================================== Actions Section ====================================== */
 .actions-section {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -116,7 +116,7 @@
   padding: 0.5rem 1rem;
 }
 
-/* Results Section */
+/* ======================================= Results Section ====================================== */
 .results-section {
   margin-top: 2rem;
 }
@@ -147,7 +147,7 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Error */
+/* ============================================ Error =========================================== */
 .error {
   background: #fff5f5;
   border: 1px solid #fed7d7;
@@ -171,7 +171,7 @@
   margin-top: 0.5rem;
 }
 
-/* Dark theme overrides */
+/* ==================================== Dark theme overrides ==================================== */
 .dark-theme .error {
   background: #4a1a1a;
   border-color: #6d2626;
@@ -186,5 +186,9 @@
 
   .app-toolbar h1 {
     font-size: 1.2rem;
+  }
+
+  .container {
+    padding-bottom: 6rem; /* More space on mobile for footer */
   }
 }

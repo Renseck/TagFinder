@@ -1,0 +1,141 @@
+.app-footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--surface-color);
+  border-top: 1px solid var(--border-color);
+  backdrop-filter: blur(10px);
+  z-index: 100;
+  padding: 0.75rem 1rem;
+  font-size: 0.8rem;
+  color: #6c757d;
+}
+
+.footer-content {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.copyright {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.heart-icon {
+  font-size: 0.9rem !important;
+  width: 0.9rem !important;
+  height: 0.9rem !important;
+  color: #e74c3c;
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 50%, 100% {
+    transform: scale(1);
+  }
+  25%, 75% {
+    transform: scale(1.1);
+  }
+}
+
+.github-link {
+  display: flex;
+  align-items: center;
+  gap: 0.2rem;
+  color: var(--text-color);
+  text-decoration: none;
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.github-link:hover {
+  background: rgba(52, 152, 219, 0.1);
+  color: #3498db;
+  transform: translateY(-1px);
+}
+
+.github-icon {
+  font-size: 0.9rem !important;
+  width: 0.9rem !important;
+  height: 0.9rem !important;
+}
+
+.tech-stack {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tech-label {
+  color: #6c757d;
+  font-size: 0.75rem;
+}
+
+.tech-items {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.tech-item {
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.3rem;
+  background: var(--bg-color);
+  border-radius: 3px;
+  border: 1px solid var(--border-color);
+}
+
+.divider {
+  color: #6c757d;
+  font-size: 0.7rem;
+}
+
+/* Dark theme support */
+:host-context(.dark-theme) .app-footer {
+  background: rgba(30, 30, 30, 0.95);
+  border-top-color: #333333;
+}
+
+:host-context(.dark-theme) .github-link:hover {
+  background: rgba(52, 152, 219, 0.15);
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .footer-content {
+    flex-direction: column;
+    gap: 0.5rem;
+    text-align: center;
+  }
+  
+  .app-footer {
+    position: relative;
+    margin-top: 2rem;
+  }
+  
+  .tech-stack {
+    order: -1;
+  }
+}
+
+@media (max-width: 480px) {
+  .tech-items {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .copyright {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+}
