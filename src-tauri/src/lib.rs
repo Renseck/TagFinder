@@ -32,20 +32,27 @@ async fn find_word_in_files(word: String, directory: String) -> Result<ScanResul
 }
 
 /* =============================== Some clean wrappers for the GUI ============================== */
-async fn analyze_directory_gui(
-    directory: &str,
-) -> Result<UnusedReport, Box<dyn std::error::Error>> {
+async fn analyze_directory_gui(directory: &str) -> Result<UnusedReport, Box<dyn std::error::Error>> {
+    // Detector invokes file walkers as needed
     let detector = UnusedDetector::new(directory.to_string());
-    detector.generate_report_parallel()
+    detector.generate_report()
 }
 
 /* ============================================================================================== */
-async fn find_word_gui(
-    word: &str,
-    directory: &str,
-) -> Result<ScanResult, Box<dyn std::error::Error>> {
-    let scanner = FileScanner::new(word.to_string(), directory.to_string());
-    scanner.scan_parallel()
+async fn find_word_gui(word: &str, directory: &str) -> Result<ScanResult, Box<dyn std::error::Error>> {
+    // Need to manually invoke walker ourselves
+    let mut scanner = FileScanner::new();
+    let mut walker = FileWalker::new(directory.to_string());
+    let threads = None;
+    
+    if let Some(thread_count) = threads {
+        scanner = scanner.with_thread_count(thread_count);
+        walker = walker.with_thread_count(thread_count)
+    }
+
+    let files_with_content = walker.walk_with_content_parallel()?;
+
+    scanner.scan(word.to_string(), files_with_content)
 }
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
