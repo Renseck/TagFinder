@@ -1,11 +1,15 @@
 use walkdir::WalkDir;
 use std::path::{Path, PathBuf};
+use std::sync::{Arc, Mutex};
 use rayon::prelude::*;
+
+use tauri::Emitter;
 
 pub struct FileWalker {
     directory: String,
     file_filter: Box<dyn Fn(&Path) -> bool + Send + Sync>,
     thread_count: Option<usize>,
+    progress_emitter: Option<tauri::AppHandle>,
 }
 
 impl FileWalker {
@@ -14,12 +18,19 @@ impl FileWalker {
             directory,
             file_filter: Box::new(|_| true),
             thread_count: None,
+            progress_emitter: None,
         }
     }
 
     /* ========================================================================================== */
     pub fn with_thread_count(mut self, count: usize) -> Self {
         self.thread_count = Some(count);
+        self
+    }
+
+    /* ========================================================================================== */
+    pub fn with_progress_emitter(mut self, app: tauri::AppHandle) -> Self {
+        self.progress_emitter = Some(app);
         self
     }
 
@@ -64,12 +75,40 @@ impl FileWalker {
         };
 
         let files = self.walk()?;
+        let total = files.len();
+        let progress_counter = Arc::new(Mutex::new(0usize));
+
+        // Initial event emission
+        if let Some(app) = &self.progress_emitter {
+            let _ = app.emit("progress", crate::ProgressEvent {
+                current: 0,
+                total,
+                message: format!("Reading {} files...", total)
+            });
+        }
+
         println!("📁 Reading {} files using {} threads...", files.len(), pool.current_num_threads());
+        let progress_emitter = self.progress_emitter.clone();
 
         let results: Result<Vec<_>, Box<dyn std::error::Error + Send + Sync>> = pool.install(|| {
             files
                 .par_iter()
                 .map(|file| -> Result<Option<(PathBuf, String)>, Box<dyn std::error::Error + Send + Sync>> {
+
+                    let mut counter = progress_counter.lock().unwrap();
+                        *counter += 1;
+                        let current = *counter;
+
+                        if current % 10 == 0 || current == total {
+                            if let Some(ref app) = progress_emitter {
+                                let _ = app.emit("progress", crate::ProgressEvent {
+                                    current,
+                                    total,
+                                    message: format!("Reading file {} of {}...", current, total)
+                                });
+                            }
+                        }
+
                     match std::fs::read_to_string(file) {
                         Ok(content) => Ok(Some((file.clone(), content))),
                         Err(_) => Ok(None), // Skip files we can't read

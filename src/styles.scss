@@ -39,6 +39,15 @@ $dark-theme: mat.define-dark-theme((
   --surface-color: #ffffff;
   --text-color: #0f0f0f;
   --border-color: #e1e8ed;
+
+  // Debug component
+  --card-background: #ffffff;
+  --background-color: #ffffff;
+  --text-muted: #6c757d;
+  --success-color: #28a745;
+  --success-background: #d4edda;
+  --code-background: #f8f9fa;
+  --primary-color: #007bff;
 }
 
 // Apply dark theme when dark-theme class is present
@@ -50,6 +59,15 @@ $dark-theme: mat.define-dark-theme((
   --surface-color: #1e1e1e;
   --text-color: #ffffff;
   --border-color: #333333;
+
+  // Debug component
+  --card-background: #2d3748;
+  --background-color: #2d3748;
+  --text-muted: #a0aec0;
+  --success-color: #48bb78;
+  --success-background: #2a4a3a;
+  --code-background: #1a202c;
+  --primary-color: #3182ce;
 }
 
 // Ensure body applies the theme

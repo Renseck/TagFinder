@@ -1,0 +1,159 @@
+.debug-panel {
+    margin: 1rem 0;
+    background: var(--card-background);
+    border: 2px dashed var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    font-family: 'Courier New', monospace;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.debug-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem 1rem;
+    background: var(--primary-color);
+    color: white;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.debug-header h4 {
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 1rem;
+    font-weight: 600;
+}
+
+.debug-actions {
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.debug-actions button {
+    color: white;
+    min-width: auto;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.8rem;
+}
+
+.auto-scroll-btn.active {
+    background: rgba(255,255,255,0.2);
+}
+
+.debug-content {
+    max-height: 400px;
+    transition: max-height 0.3s ease;
+}
+
+.debug-content.collapsed {
+    max-height: 0;
+    overflow: hidden;
+}
+
+.debug-stats {
+    padding: 0.75rem 1rem;
+    background: var(--background-color);
+    border-bottom: 1px solid var(--border-color);
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 0.5rem;
+    font-size: 0.8rem;
+}
+
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+}
+
+.stat-label {
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.stat-value {
+    color: var(--text-color);
+    font-weight: 500;
+}
+
+.debug-actions-row {
+    padding: 0.75rem 1rem;
+    background: var(--background-color);
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    gap: 0.5rem;
+    align-items: center;
+}
+
+.debug-logs {
+    max-height: 250px;
+    overflow-y: auto;
+    background: var(--code-background);
+    padding: 0.5rem;
+}
+
+.debug-logs.auto-scroll {
+    scroll-behavior: smooth;
+}
+
+.log-entry {
+    display: flex;
+    margin-bottom: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--background-color);
+    border-radius: 3px;
+    border-left: 3px solid var(--border-color);
+    font-size: 0.75rem;
+    line-height: 1.4;
+    transition: all 0.2s ease;
+}
+
+.log-entry.recent {
+    border-left-color: var(--success-color);
+    background: var(--success-background);
+}
+
+.log-timestamp {
+    color: var(--text-muted);
+    margin-right: 0.75rem;
+    min-width: 80px;
+    font-size: 0.7rem;
+}
+
+.log-message {
+    color: var(--text-color);
+    flex: 1;
+    word-break: break-word;
+}
+
+.no-logs {
+    text-align: center;
+    color: var(--text-muted);
+    padding: 2rem;
+    font-style: italic;
+}
+
+/* Animation when new entries are added */
+.log-entry:nth-last-child(1):not(.no-logs) {
+    animation: newMessage 0.5s ease-out;
+}
+
+@keyframes newMessage {
+    0% {
+        transform: translateX(-10px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Enhanced hover effect for recent messages */
+.log-entry:nth-last-child(-n+3):not(.no-logs):hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}

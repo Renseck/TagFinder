@@ -1,0 +1,66 @@
+<div class="debug-panel" *ngIf="logs.length > 0 || showAlways">
+    <div class="debug-header">
+    <h4>
+        <mat-icon>bug_report</mat-icon>
+        Debug Panel ({{ logs.length }} entries)
+    </h4>
+    <div class="debug-actions">
+        <button mat-button (click)="clearLogs.emit()" class="clear-btn">
+        <mat-icon>clear_all</mat-icon>
+        Clear
+        </button>
+        <button mat-button (click)="collapsed = !collapsed" class="toggle-btn">
+        <mat-icon>{{ collapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
+        {{ collapsed ? 'Expand' : 'Collapse' }}
+        </button>
+        <button mat-button (click)="autoScroll = !autoScroll" 
+                [class.active]="autoScroll" class="auto-scroll-btn">
+        <mat-icon>{{ autoScroll ? 'lock' : 'lock_open' }}</mat-icon>
+        Auto-scroll
+        </button>
+    </div>
+    </div>
+    
+    <div class="debug-content" [class.collapsed]="collapsed">
+    <div class="debug-stats" *ngIf="!collapsed">
+        <div class="stat-item">
+        <span class="stat-label">Progress:</span>
+        <span class="stat-value">{{ progressCurrent }}/{{ progressTotal }} ({{ getProgressPercentage() }}%)</span>
+        </div>
+        <div class="stat-item">
+        <span class="stat-label">Message:</span>
+        <span class="stat-value">{{ progressMessage || 'None' }}</span>
+        </div>
+        <div class="stat-item">
+        <span class="stat-label">Loading:</span>
+        <span class="stat-value">{{ loading ? 'Yes' : 'No' }}</span>
+        </div>
+        <div class="stat-item">
+        <span class="stat-label">Action:</span>
+        <span class="stat-value">{{ currentAction || 'None' }}</span>
+        </div>
+    </div>
+    
+    <div class="debug-actions-row" *ngIf="!collapsed">
+        <button mat-button (click)="exportLogs()" *ngIf="logs.length > 0">
+        <mat-icon>download</mat-icon>
+        Export Logs
+        </button>
+    </div>
+
+    <div class="debug-logs" 
+            #logsContainer
+            [class.auto-scroll]="autoScroll"
+            *ngIf="!collapsed">
+        <div class="log-entry" 
+            *ngFor="let log of logs; let i = index; trackBy: trackByIndex"
+            [class.recent]="isRecentLog(i)">
+        <span class="log-timestamp">{{ extractTimestamp(log) }}</span>
+        <span class="log-message">{{ extractMessage(log) }}</span>
+        </div>
+        <div class="no-logs" *ngIf="logs.length === 0">
+        No debug logs yet. Start a scan to see progress events.
+        </div>
+    </div>
+    </div>
+</div>

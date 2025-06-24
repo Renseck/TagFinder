@@ -7,10 +7,12 @@ use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use rayon::prelude::*;
 use std::sync::{Arc, Mutex};
+use tauri::Emitter;
 
 pub struct UnusedDetector {
     directory: String,
     thread_count: Option<usize>,
+    progress_emitter: Option<tauri::AppHandle>,
 }
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
@@ -32,6 +34,7 @@ impl UnusedDetector {
         Self { 
             directory,
             thread_count: None,
+            progress_emitter: None,
         }
     }
 
@@ -42,11 +45,22 @@ impl UnusedDetector {
     }
 
     /* ========================================================================================== */
+    pub fn with_progress_emitter(mut self, app: tauri::AppHandle) -> Self {
+        self.progress_emitter = Some(app);
+        self
+    }
+
+    /* ========================================================================================== */
     pub fn generate_report(&self) -> Result<UnusedReport, Box<dyn std::error::Error>> {
         // Read files
-        let walker = FileWalker::new(self.directory.clone())
+        let mut walker = FileWalker::new(self.directory.clone())
             .with_extensions(vec!["css", "scss"])
             .with_thread_count(self.thread_count.unwrap_or(num_cpus::get()));
+
+        if let Some(ref app) = self.progress_emitter {
+            walker = walker.with_progress_emitter(app.clone());
+        }
+
         let files_with_content = walker.walk_with_content_parallel()?;
 
         // Extract classes
@@ -78,11 +92,25 @@ impl UnusedDetector {
         &self,
         classes: &[CssClass],
     ) -> Result<(Vec<CssClass>, Vec<CssClass>, HashMap<String, Vec<UnusedClass>>), Box<dyn std::error::Error>> {
-        let walker = FileWalker::new(self.directory.clone());
+        let mut walker = FileWalker::new(self.directory.clone());
+
+        if let Some(ref app) = self.progress_emitter {
+            walker = walker.with_progress_emitter(app.clone());
+        }
+
         let files_with_content = walker.walk_with_content_parallel()?;
 
         let progress_counter = Arc::new(Mutex::new(0usize));
         let total = classes.len();
+
+        // Emit initial progress
+        if let Some(ref app) = self.progress_emitter {
+            let _ = app.emit("progress", crate::ProgressEvent {
+                current: 0,
+                total,
+                message: format!("Analyzing {} CSS classes...", total)
+            });
+        }
         
         // Configure thread pool
         let pool = match self.thread_count {
@@ -91,6 +119,7 @@ impl UnusedDetector {
         };
 
         println!("🔍 Analyzing {} classes using {} threads...", total, pool.current_num_threads());
+        let progress_emitter = self.progress_emitter.clone();
 
         let results: Result<Vec<_>, Box<dyn std::error::Error + Send + Sync>> = pool.install(|| {
             classes
@@ -100,7 +129,19 @@ impl UnusedDetector {
                     {
                         let mut counter = progress_counter.lock().unwrap();
                         *counter += 1;
-                        if *counter % 25 == 0 {
+                        let current = *counter;
+
+                        if current % 10 == 0 || current == total {
+                            if let Some(ref app) = progress_emitter {
+                                let _ = app.emit("progress", crate::ProgressEvent {
+                                    current,
+                                    total,
+                                    message: format!("Analyzing class {} of {}...", current, total)
+                                });
+                            }
+                        }
+
+                        if current % 25 == 0 {
                             println!("   Processed {}/{} classes...", *counter, total);
                         }
                     }
@@ -134,6 +175,15 @@ impl UnusedDetector {
             } else {
                 used_classes.push(unused_class.class);
             }
+        }
+
+        // Emit completion progress
+        if let Some(ref app) = self.progress_emitter {
+            let _ = app.emit("progress", crate::ProgressEvent {
+                current: total,
+                total,
+                message: "Analysis complete!".to_string()
+            });
         }
         
         println!("✅ Analysis complete!");

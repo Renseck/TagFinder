@@ -1,8 +1,18 @@
 <main class="container">
       <mat-toolbar class="app-toolbar">
         <span class="toolbar-spacer"></span>
-        <h1>CSS Class Finder</h1>
+        <h1>{{ appName }}</h1>
+        <small *ngIf="isDevelopment" class="dev-indicator">(DEV)</small>
         <span class="toolbar-spacer"></span>
+        <!-- Debug toggle button -->
+        <button
+        *ngIf="isDevelopment"
+          class="debug-toggle-btn"
+          (click)="toggleDebugWindow()"
+          title="Toggle Debug Window">
+          <mat-icon>bug_report</mat-icon>
+        </button>
+
         <button mat-icon-button (click)="toggleTheme()" class="theme-toggle">
           <mat-icon>{{ isDarkMode ? 'wb_sunny' : 'nights_stay' }}</mat-icon>
         </button>
@@ -11,6 +21,18 @@
       <div class="content">
         <p class="app-description">Find unused CSS classes and search for specific words in your project</p>
         <app-directory-selector (directorySelected)="onDirectorySelected($event)"></app-directory-selector>
+
+        <!-- Debug panel (remove for production) -->
+        <app-debug-window
+          *ngIf="isDevelopment && showDebugWindow"
+          [logs]="debugLogs"
+          [progressCurrent]="progressCurrent"
+          [progressTotal]="progressTotal"
+          [progressMessage]="progressMessage"
+          [loading]="loading"
+          [currentAction]="currentAction"
+          (clearLogs)="clearDebugLogs()">
+        </app-debug-window>
 
         <section class="actions-section">
           <div class="action-group">
@@ -59,7 +81,16 @@
 
         <div class="loading" *ngIf="loading">
           <div class="spinner"></div>
-          <p>{{ currentAction === 'unused' ? 'Scanning for unused CSS classes...' : 'Searching for word...' }}</p>
+          <div class="progress-container" *ngIf="progressTotal > 0">
+            <div class="progress-bar">
+              <div class="progress-fill" [style.width.%]="getProgressPercentage()"></div>
+            </div>
+            <div class="progress-text">
+              <span>{{ progressCurrent }}/{{ progressTotal }} files</span>
+              <span class="progress-percentage">{{ getProgressPercentage() }}%</span>
+            </div>
+          </div>
+          <p>{{ progressMessage || (currentAction === 'unused' ? 'Scanning for unused CSS classes...' : 'Searching for word...') }}</p>
         </div>
 
         <div class="error" *ngIf="errorMessage">
