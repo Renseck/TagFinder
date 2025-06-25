@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 
 export interface ScanResult {
   css_files: string[];
@@ -10,7 +11,7 @@ export interface ScanResult {
 @Component({
   selector: 'app-scan-results',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './scan-results.component.html',
   styleUrl: './scan-results.component.css'
 })

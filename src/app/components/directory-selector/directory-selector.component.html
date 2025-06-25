@@ -17,8 +17,10 @@
           [disabled]="isSelecting"
           class="browse-btn"
         >
-          <span *ngIf="!isSelecting">📁 Browse</span>
-          <span *ngIf="isSelecting">🔄 Selecting...</span>
+          <mat-icon *ngIf="!isSelecting" class="browse-icon">folder</mat-icon>
+          <mat-icon *ngIf="isSelecting" class="selecting-icon">autorenew</mat-icon>
+          <span *ngIf="!isSelecting">Browse</span>
+          <span *ngIf="isSelecting">Selecting...</span>
         </button>
         <button 
           type="button" 
@@ -27,15 +29,21 @@
           class="clear-btn"
           title="Clear selection"
         >
-          ✕
+          <mat-icon class="clear-icon">close</mat-icon>
         </button>
       </div>
     </div>
     <div class="directory-info" *ngIf="selectedDirectory">
-      <small>📂 {{ getDirectoryName() }}</small>
+      <small>
+        <mat-icon class="info-icon">folder</mat-icon>
+        {{ getDirectoryName() }}
+      </small>
     </div>
     <div class="error-message" *ngIf="errorMessage">
-      <small>⚠️ {{ errorMessage }}</small>
+      <small>
+        <mat-icon class="error-icon">warning</mat-icon>
+        {{ errorMessage }}
+      </small>
     </div>
   </div>
 </section>

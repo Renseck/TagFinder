@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { MatIconModule } from '@angular/material/icon';
 
 export interface CssClass {
   name: string;
@@ -23,7 +24,7 @@ export interface UnusedReport {
 @Component({
   selector: 'app-unused-report',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, MatIconModule],
   templateUrl: './unused-report.component.html',
   styleUrl: './unused-report.component.css'
 })

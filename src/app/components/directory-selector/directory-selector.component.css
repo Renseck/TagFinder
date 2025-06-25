@@ -38,10 +38,22 @@
 
 .button-group {
   display: flex;
+  align-items: center;
   gap: 0.25rem;
 }
 
+.browse-icon {
+  color: #f9d86c; /* Blue for browse */
+  margin-right: 0.5rem;
+  font-size: 1.1rem !important;
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+}
+
 .browse-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.75rem 1.5rem;
   background: #3498db;
   color: white;
@@ -65,7 +77,26 @@
   transform: none;
 }
 
+.selecting-icon {
+  color: #ff9800; /* Orange for loading */
+  margin-right: 0.5rem;
+  font-size: 1.1rem !important;
+  width: 1.1rem !important;
+  height: 1.1rem !important;
+  animation: rotate 1s linear infinite; /* Use the spin animation you already have */
+}
+
+.clear-icon {
+  color: white; /* Red for clear */
+  font-size: 1rem !important;
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
 .clear-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 0.75rem;
   background: #e74c3c;
   color: white;
@@ -75,9 +106,6 @@
   font-weight: 600;
   transition: all 0.3s;
   width: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
 }
 
 .clear-btn:hover {
@@ -98,12 +126,30 @@
   font-weight: 500;
 }
 
+.info-icon {
+  color: #f9d86c; 
+  margin-right: 0.3rem;
+  font-size: 0.9rem !important;
+  width: 0.9rem !important;
+  height: 0.9rem !important;
+  vertical-align: middle;
+}
+
 .error-message {
   margin-top: 0.5rem;
   padding: 0.5rem;
   background: #fff3cd;
   border-radius: 6px;
   border-left: 3px solid #ffc107;
+}
+
+.error-icon {
+  color: #ff5722; /* Orange-red for warnings */
+  margin-right: 0.3rem;
+  font-size: 0.9rem !important;
+  width: 0.9rem !important;
+  height: 0.9rem !important;
+  vertical-align: middle;
 }
 
 .error-message small {
@@ -129,6 +175,18 @@
   color: #f1c40f;
 }
 
+:host-context(.dark-theme) .selecting-icon {
+  color: #ffb74d;
+}
+
+:host-context(.dark-theme) .info-icon {
+  color: #f9d86c;
+}
+
+:host-context(.dark-theme) .error-icon {
+  color: #ff7043;
+}
+
 /* Loading animation for the selecting state */
 @keyframes rotate {
   from {
@@ -137,10 +195,6 @@
   to {
     transform: rotate(360deg);
   }
-}
-
-.browse-btn:disabled span {
-  animation: rotate 1s linear infinite;
 }
 
 /* Responsive design */

@@ -21,16 +21,17 @@
         </div>
     </div>
     <div class="css-only-warning" *ngIf="result.is_css_only">
-        ⚠️ This word appears only in CSS files - it might be unused!
+        <mat-icon class="warning-icon">warning</mat-icon>
+        This word appears only in CSS files - it might be unused!
     </div>
     </div>
     
     <div class="file-results" *ngIf="getAllFiles().length > 0">
     <div class="file-group" *ngFor="let filePath of getAllFiles()">
         <div class="file-header">
-        <span class="file-type-icon" [class.css-file]="getFileType(filePath) === 'css'">
-            {{ getFileType(filePath) === 'css' ? '🎨' : '📄' }}
-        </span>
+        <mat-icon class="file-type-icon" [class.css-file]="getFileType(filePath) === 'css'">
+            {{ getFileType(filePath) === 'css' ? 'palette' : 'description' }}
+        </mat-icon>
         <span class="file-name">{{ getFileName(filePath) }}</span>
         <span class="file-type-badge" [class.css-badge]="getFileType(filePath) === 'css'">
             {{ getFileType(filePath).toUpperCase() }}
@@ -40,6 +41,7 @@
     </div>
     
     <div class="no-results" *ngIf="getAllFiles().length === 0">
+    <mat-icon class="no-results-icon">search_off</mat-icon>
     <p>No matches found for "{{ searchWord }}"</p>
     </div>
 </div>

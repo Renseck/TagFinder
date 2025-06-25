@@ -25,16 +25,19 @@
     <div class="file-results" *ngIf="getFilesWithUnused().length > 0">
     <div class="file-group" *ngFor="let filePath of getFilesWithUnused()">
         <div class="file-header" (click)="toggleFile(filePath)">
-        <span class="toggle-icon">{{ isFileExpanded(filePath) ? '▼' : '▶' }}</span>
+        <mat-icon class="toggle-icon" [class.rotated]="isFileExpanded(filePath)">expand_more</mat-icon>
         <span class="file-name">{{ getFileName(filePath) }}</span>
         <span class="tag-count">({{ getUnusedClassesForFile(filePath).length }} unused)</span>
         </div>
         
-        <div class="file-content" *ngIf="isFileExpanded(filePath)">
-        <div class="classes-list">
-            <div class="class-item" *ngFor="let unusedClass of getUnusedClassesForFile(filePath)">
-            <code>.{{ unusedClass.class.name }}</code>
-            <span class="line-info">line {{ unusedClass.class.line }}</span>
+        <div class="file-content-wrapper" [class.expanded]="isFileExpanded(filePath)">
+        <div class="file-content">
+            <div class="classes-list">
+            <div class="class-item" *ngFor="let unusedClass of getUnusedClassesForFile(filePath); let i = index"
+                 [style.animation-delay]="(i * 50) + 'ms'">
+                <code>.{{ unusedClass.class.name }}</code>
+                <span class="line-info">line {{ unusedClass.class.line }}</span>
+            </div>
             </div>
         </div>
         </div>
@@ -42,6 +45,7 @@
     </div>
     
     <div class="no-results" *ngIf="getFilesWithUnused().length === 0">
-    <p>🎉 No unused CSS classes found! Your project is clean.</p>
+    <mat-icon class="celebration-icon">celebration</mat-icon>
+    <p> No unused CSS classes found! Your project is clean.</p>
     </div>
 </div>

@@ -61,6 +61,17 @@ h2 {
     padding: 0.75rem;
     border-radius: 6px;
     font-weight: 500;
+    display: flex;
+    align-items: center;
+}
+
+.warning-icon {
+    font-size: 1.2rem !important;
+    width: 1.2rem !important;
+    height: 1.2rem !important;
+    color: #ff9800;
+    margin-right: 0.5rem;
+    vertical-align: middle;
 }
 
 .file-group {
@@ -77,9 +88,25 @@ h2 {
     background: var(--bg-color);
 }
 
+.file-header:hover .file-type-icon {
+    color: var(--text-color);
+}
+
+.file-header:hover .file-type-icon.css-file {
+    color: #c0392b; /* Darker red on hover */
+}
+
 .file-type-icon {
-    margin-right: 0.5rem;
-    font-size: 1.2rem;
+    margin-right: 0.75rem;
+    font-size: 1.3rem !important;
+    width: 1.3rem !important;
+    height: 1.3rem !important;
+    color: #6c757d;
+    transition: color 0.2s ease;
+}
+
+.file-type-icon.css-file {
+    color: #e74c3c;
 }
 
 .file-name {
@@ -102,10 +129,23 @@ h2 {
 }
 
 .no-results {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     color: #6c757d;
     font-style: italic;
-    padding: 2rem;
+    padding: 3rem 2rem;
+}
+
+.no-results-icon {
+    font-size: 2.5rem !important;
+    width: 2.5rem !important;
+    height: 2.5rem !important;
+    color: #6c757d;
+    margin-bottom: 1rem;
+    opacity: 0.7;
 }
 
 /* Dark theme overrides */
@@ -113,4 +153,24 @@ h2 {
     background: #4a3a2d;
     border-color: #ffc107;
     color: #f1c40f;
+}
+
+:host-context(.dark-theme) .warning-icon {
+    color: #ffb74d;
+}
+
+:host-context(.dark-theme) .file-type-icon {
+    color: #a0aec0;
+}
+
+:host-context(.dark-theme) .file-type-icon.css-file {
+    color: #ff6b6b;
+}
+
+:host-context(.dark-theme) .file-header:hover .file-type-icon.css-file {
+    color: #ff5252;
+}
+
+:host-context(.dark-theme) .no-results-icon {
+    color: #a0aec0;
 }

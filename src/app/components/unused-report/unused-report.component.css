@@ -54,6 +54,12 @@ h2 {
     border: 1px solid var(--border-color);
     border-radius: 8px;
     overflow: hidden;
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+}
+
+.file-group:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
 }
 
 .file-header {
@@ -62,18 +68,41 @@ h2 {
     padding: 1rem;
     background: var(--bg-color);
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.2s, transform 0.1s ease;
     border-bottom: 1px solid var(--border-color);
 }
 
 .file-header:hover {
     background: #e9ecef;
+    background-color: rgba(33, 150, 243, 0.05);
+    transform: translateY(-1px);
+}
+
+.file-header:active {
+    transform: translateY(0);
+}
+
+
+.file-header:hover .toggle-icon {
+    color: var(--text-color);
+}
+
+.file-header.expanded .toggle-icon {
+    color: #2196f3; /* Blue when expanded */
 }
 
 .toggle-icon {
     margin-right: 0.5rem;
-    font-size: 0.8rem;
+    font-size: 1.2rem !important;
+    width: 1.2rem !important;
+    height: 1.2rem !important;
     color: #6c757d;
+    transition: transform 0.3s cubic-bezier(0.4, 0.0, 0.2, 1), color 0.2s ease;
+    transform-origin: center;
+}
+
+.toggle-icon.rotated {
+    transform: rotate(180deg);
 }
 
 .file-name {
@@ -91,6 +120,41 @@ h2 {
     padding: 1rem;
     background: var(--surface-color);
 }
+
+/* Dropdown animation wrapper */
+.file-content-wrapper {
+    overflow: hidden;
+    max-height: 0;
+    transition: max-height 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    opacity: 0;
+    transform: translateY(-10px);
+}
+
+.file-content-wrapper.expanded {
+    max-height: 2000px; /* Large enough for any content */
+    opacity: 1;
+    transform: translateY(0);
+    transition: max-height 0.4s cubic-bezier(0.4, 0.0, 0.2, 1),
+                opacity 0.3s ease 0.1s,
+                transform 0.3s ease 0.1s;
+}
+
+/* Individual class items slide in animation */
+.file-content-wrapper.expanded .class-item {
+    animation: slideInFromLeft 0.3s ease forwards;
+}
+
+@keyframes slideInFromLeft {
+    0% {
+        opacity: 0;
+        transform: translateX(-20px);
+    }
+    100% {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
 
 .classes-list {
     display: flex;
@@ -120,6 +184,9 @@ h2 {
 }
 
 .no-results {
+    display: flex;
+    align-items: center;
+    justify-content: center;
     text-align: center;
     color: #6c757d;
     font-style: italic;
@@ -134,4 +201,49 @@ h2 {
 
 :host-context(.dark-theme) .class-item code {
     color: #ff6b6b;
+}
+
+@media (max-width: 768px) {
+    .toggle-icon {
+        transition: transform 0.2s ease, color 0.2s ease;
+    }
+    
+    .file-content-wrapper {
+        transition: max-height 0.3s ease;
+    }
+    
+    .file-content-wrapper.expanded {
+        transition: max-height 0.3s ease,
+                    opacity 0.2s ease 0.05s,
+                    transform 0.2s ease 0.05s;
+    }
+    
+    .class-item:hover {
+        transform: none; /* Remove hover transforms on mobile */
+    }
+}
+
+/* =========================================== Yippee =========================================== */
+/* Celebration icon animation */
+.celebration-icon {
+    font-size: 3rem !important;
+    width: 3rem !important;
+    height: 3rem !important;
+    color: #4caf50;
+    animation: celebrate 2s ease-in-out infinite;
+}
+
+@keyframes celebrate {
+    0%, 100% {
+        transform: scale(1) rotate(0deg);
+    }
+    25% {
+        transform: scale(1.1) rotate(10deg);
+    }
+    50% {
+        transform: scale(1.05) rotate(-5deg);
+    }
+    75% {
+        transform: scale(1.1) rotate(10deg);
+    }
 }
