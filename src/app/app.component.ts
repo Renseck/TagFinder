@@ -80,7 +80,7 @@ export class AppComponent implements OnInit, OnDestroy {
       try {
         this.logToDebug("[FRONTEND] Setting up Tauri event listener");
         await listen('progress', async (event: any) => {
-          this.logToDebug(`[FRONTEND] Progress event received: ${JSON.stringify(event.payload)}`);
+          this.logToDebug(`[BACKEND] Progress event received: ${JSON.stringify(event.payload)}`);
           const { current, total, message } = event.payload;
           this.progressCurrent = current;
           this.progressTotal = total;
@@ -103,13 +103,15 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   /* ============================================================================================ */
-  toggleTheme(): void {
-    this.themeService.toggleTheme();
-  }
-  /* ============================================================================================ */
   onDirectorySelected(directory: string): void {
     this.selectedDirectory = directory;
     this.logToDebug(`[FRONTEND] Directory selected: ${directory}`);
+
+    // Clear previous results when directory changes
+    if (this.showResults) {
+      this.clearResults();
+      this.logToDebug(`[FRONTEND] Cleared previous results due to directory change`);
+    }
   }
 
   /* ============================================================================================ */
@@ -147,6 +149,7 @@ export class AppComponent implements OnInit, OnDestroy {
   async findWordInFiles() {
     if (!this.selectedDirectory) return;
 
+    this.logToDebug(`[FRONTEND] Starting word search for "${this.searchWord}"`);
     this.loading = true;
     this.currentAction = "word";
     this.clearResults();
@@ -154,16 +157,21 @@ export class AppComponent implements OnInit, OnDestroy {
     this.resetProgress();
 
     try {
+      this.logToDebug(`[FRONTEND] Invoking find_word_in_files command`);
       this.wordResults = await invoke<ScanResult>("find_word_in_files", { 
         word: this.searchWord,
         directory: this.selectedDirectory 
       });
+      
       this.showResults = true;
-      console.log("Word search result:", this.wordResults);
+      this.logToDebug(`[FRONTEND] Word search result: ${JSON.stringify(this.wordResults)}`);
+
     } catch (error) {
-      console.error("Error finding word:", error);
+      this.logToDebug(`[FRONTEND] Word search failed: ${error}`);
       this.showError(`Failed to search for word: ${error}`);
+
     } finally {
+      this.logToDebug(`[FRONTEND] Cleaning up word search`);
       this.loading = false;
       this.currentAction = '';
       this.resetProgress();
@@ -207,14 +215,20 @@ export class AppComponent implements OnInit, OnDestroy {
   }
 
   /* ============================================================================================ */
+  clearDebugLogs(): void {
+    this.debugLogs = [];
+  }
+
+  /* ============================================================================================ */
   toggleDebugWindow(): void {
     this.showDebugWindow = !this.showDebugWindow;
     this.logToDebug(`[FRONTEND] Debug window ${this.showDebugWindow ? 'opened' : 'closed'}`);
   }
 
   /* ============================================================================================ */
-  clearDebugLogs(): void {
-    this.debugLogs = [];
+  toggleTheme(): void {
+    this.themeService.toggleTheme();
+    this.logToDebug(`[FRONTEND] Theme toggled to ${this.isDarkMode ? 'dark' : 'light'} mode`)
   }
 
   /* ============================================================================================ */
@@ -234,6 +248,6 @@ export class AppComponent implements OnInit, OnDestroy {
       this.debugLogs= this.debugLogs.slice(-100);
     }
 
-    // Console.log(logMessage);
+    console.log(logMessage);
   }
 }
