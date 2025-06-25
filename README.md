@@ -1,5 +1,8 @@
 <div align="center">
-  <h1> <img src="src-tauri/app-icon.png" width="64" height="64">CSS Class Finder - GUI</h1>
+  <div style="display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 16px;">
+    <img src="src-tauri/app-icon.png" width="64" height="64" alt="CSS Class Finder Icon">
+    <h1 style="margin: 0;">CSS Class Finder - GUI</h1>
+  </div>
   <p><strong>A beautiful desktop application for finding unused CSS classes in your project directories</strong></p>
   
   <p>
@@ -32,6 +35,15 @@ A powerful desktop application built with **Tauri v2** and **Angular** that prov
 - **Fast Rust Backend**: Leverages the high-performance tag-finder-cli engine
 - **Standalone Executable**: No dependencies required for end users
 - **Memory Efficient**: Handles large codebases without breaking a sweat
+
+## Screenshots
+<div align="center">
+  <h3>🎨 Light & Dark Theme Support</h3>
+  <img src="images/screenshots/tagfinder-lightmode-example.png" alt="CSS Class Finder - Light Theme" width="700">
+  <br><br>
+  <img src="images/screenshots/tagfinder-darkmode-example.png" alt="CSS Class Finder - Dark Theme" width="700">
+</div>
+
 ## Build from Source
 
 #### Prerequisites
@@ -56,6 +68,14 @@ npm run tauri build
 ```
 
 The built executable will be in `src-tauri/target/release/bundle/`.
+
+> **💡 Development Mode Features**  
+> When running in development mode (`npm run tauri dev`), you'll see a debug button in the top toolbar that provides:
+> - **Real-time debug logs** showing backend operations and progress updates
+> - **Error tracking** for troubleshooting issues
+> - **Export functionality** to save debug logs for issue reporting
+>
+> *Note: The debug panel is automatically hidden in production builds for a cleaner user experience.*
 
 ## Usage
 
