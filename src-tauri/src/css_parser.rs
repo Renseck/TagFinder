@@ -3,11 +3,12 @@ use crate::text_processor::{TextProcessor};
 use crate::progress_reporter::ProgressReporter;
 use serde::{Deserialize, Serialize};
 use rayon::prelude::*;
-use std::sync::{Arc, Mutex};
+use std::sync::{Arc};
 use std::path::PathBuf;
 
 pub struct CssParser {
     thread_count: Option<usize>,
+    progress_emitter: Option<tauri::AppHandle>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -21,6 +22,7 @@ impl CssParser {
     pub fn new() -> Self {
         Self { 
             thread_count: None,
+            progress_emitter: None,
         }
     }
 
@@ -31,16 +33,37 @@ impl CssParser {
     }
 
     /* ========================================================================================== */
+    pub fn with_progress_emitter(mut self, app: tauri::AppHandle) -> Self {
+        self.progress_emitter = Some(app);
+        self
+    }
+
+    /* ========================================================================================== */
     // Currently unused
     pub fn extract_classes(&self, files_with_content: Vec<(PathBuf, String)>) -> Result<Vec<CssClass>, Box<dyn std::error::Error>> {
         let processor = TextProcessor::new()
             .add_pattern("css_class", r"\.([a-zA-Z][a-zA-Z0-9_-]*)")?;
         
-        let mut progress = ProgressReporter::new(files_with_content.len(), "Processing".to_string());
+        let total = files_with_content.len();
+        let mut progress = ProgressReporter::new(total, "Processing CSS files".to_string())
+            .with_step_size(std::cmp::max(1, total / 20));
+
+        if let Some(ref app) = self.progress_emitter {
+            progress = progress.with_emitter(app.clone());
+        }
+
+        progress.emit_progress(0, &format!("Extracting classes from {} files...", total));
+
         let mut classes = Vec::new();
+        let mut processed = 0;
         
         for (file_path, content) in files_with_content {
-            progress.tick();
+            processed += 1;
+            
+            // Emit progress every 10 files or on completion
+            if processed % 10 == 0 || processed == total {
+                progress.emit_progress(processed, &format!("Processing file {} of {}...", processed, total));
+            }
             
             let matches = processor.process_content(&content);
             let file_path_str = file_path.to_string_lossy().to_string();
@@ -68,23 +91,39 @@ impl CssParser {
                 .add_pattern("css_class", r"\.([a-zA-Z][a-zA-Z0-9_-]*)")?
         );
         
-        let progress = Arc::new(Mutex::new(
-            ProgressReporter::new(files_with_content.len(), "Processing file".to_string())
-        ));
+        let total = files_with_content.len();
+
+        let mut progress = ProgressReporter::new(total, "Extracting CSS classes".to_string())
+            .with_step_size(std::cmp::max(1, total / 20));
         
+        if let Some(ref app) = self.progress_emitter {
+            progress = progress.with_emitter(app.clone());
+        }
+
+        progress.emit_progress(0, &format!("Extracting classes from {} files...", total));
+
         // Configure thread pool
         let pool = match self.thread_count {
             Some(count) => rayon::ThreadPoolBuilder::new().num_threads(count).build()?,
             None => rayon::ThreadPoolBuilder::new().build()?,
         };
 
+        let progress_counter = progress.create_counter();
+
         let all_classes: Vec<CssClass> = pool.install(|| {
             files_with_content
                 .par_iter()
                 .flat_map(|(file_path, content)| {
                     // Update progress (thread-safe)
-                    if let Ok(mut prog) = progress.lock() {
-                        prog.tick();
+                    let current = {
+                        let mut counter = progress_counter.lock().unwrap();
+                        *counter += 1;
+                        *counter
+                    };
+
+                    // Emit progress every 10 files or on completion
+                    if current % 10 == 0 || current == total {
+                        progress.emit_progress(current, &format!("Processing file {} of {}...", current, total));
                     }
                     
                     let matches = processor.process_content(content);
@@ -106,9 +145,7 @@ impl CssParser {
                 .collect()
         });
         
-        if let Ok(prog) = progress.lock() {
-            prog.finish("CSS extraction complete!");
-        }
+        progress.finish("CSS extraction complete!");
         
         let mut classes = all_classes;
         self.deduplicate_classes(&mut classes);

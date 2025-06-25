@@ -2,12 +2,11 @@ use crate::css_parser::{CssClass, CssParser};
 use crate::utils::{print_header_line, print_section_line};
 use crate::scanner::FileScanner;
 use crate::file_walker::FileWalker;
+use crate::ProgressReporter;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use rayon::prelude::*;
-use std::sync::{Arc, Mutex};
-use tauri::Emitter;
 
 pub struct UnusedDetector {
     directory: String,
@@ -79,11 +78,16 @@ impl UnusedDetector {
 
     /* ========================================================================================== */
     fn extract_classes(&self, files_with_content: Vec<(PathBuf, String)>) -> Result<Vec<CssClass>, Box<dyn std::error::Error>> {
-        println!("🔍 Extracting CSS classes...");
-        let css_parser = CssParser::new()
+        // println!("🔍 Extracting CSS classes...");
+        let mut css_parser = CssParser::new()
             .with_thread_count(self.thread_count.unwrap_or(num_cpus::get()));
+
+        if let Some(ref app) = self.progress_emitter {
+            css_parser = css_parser.with_progress_emitter(app.clone());
+        }
+        
         let classes = css_parser.extract_classes_parallel(files_with_content)?;
-        println!("📊 Found {} CSS classes. Checking usage...", classes.len());
+        // println!("📊 Found {} CSS classes. Checking usage...", classes.len());
         Ok(classes)
     }
 
@@ -93,24 +97,22 @@ impl UnusedDetector {
         classes: &[CssClass],
     ) -> Result<(Vec<CssClass>, Vec<CssClass>, HashMap<String, Vec<UnusedClass>>), Box<dyn std::error::Error>> {
         let mut walker = FileWalker::new(self.directory.clone());
-
         if let Some(ref app) = self.progress_emitter {
             walker = walker.with_progress_emitter(app.clone());
         }
 
         let files_with_content = walker.walk_with_content_parallel()?;
-
-        let progress_counter = Arc::new(Mutex::new(0usize));
         let total = classes.len();
 
-        // Emit initial progress
+        // Console logger and event emitter
+        let mut progress = ProgressReporter::new(total, "Analyzing classes".to_string())
+            .with_step_size(25);
+
         if let Some(ref app) = self.progress_emitter {
-            let _ = app.emit("progress", crate::ProgressEvent {
-                current: 0,
-                total,
-                message: format!("Analyzing {} CSS classes...", total)
-            });
+            progress = progress.with_emitter(app.clone());
         }
+
+        progress.emit_progress(0, &format!("Analyzing {} CSS classes...", total));
         
         // Configure thread pool
         let pool = match self.thread_count {
@@ -118,32 +120,21 @@ impl UnusedDetector {
             None => rayon::ThreadPoolBuilder::new().build()?,
         };
 
-        println!("🔍 Analyzing {} classes using {} threads...", total, pool.current_num_threads());
-        let progress_emitter = self.progress_emitter.clone();
+        let progress_counter = progress.create_counter();
 
         let results: Result<Vec<_>, Box<dyn std::error::Error + Send + Sync>> = pool.install(|| {
             classes
                 .par_iter()
                 .map(|class| -> Result<UnusedClass, Box<dyn std::error::Error + Send + Sync>> {
                     // Update progress
-                    {
+                    let current = {
                         let mut counter = progress_counter.lock().unwrap();
                         *counter += 1;
-                        let current = *counter;
+                        *counter
+                    };
 
-                        if current % 10 == 0 || current == total {
-                            if let Some(ref app) = progress_emitter {
-                                let _ = app.emit("progress", crate::ProgressEvent {
-                                    current,
-                                    total,
-                                    message: format!("Analyzing class {} of {}...", current, total)
-                                });
-                            }
-                        }
-
-                        if current % 25 == 0 {
-                            println!("   Processed {}/{} classes...", *counter, total);
-                        }
+                    if current % 10 == 0 || current == total {
+                        progress.emit_progress(current, &format!("Analyzing class {} of {}...", current, total));
                     }
 
                     let is_unused = self.is_class_unused(class, &files_with_content)?;
@@ -177,16 +168,7 @@ impl UnusedDetector {
             }
         }
 
-        // Emit completion progress
-        if let Some(ref app) = self.progress_emitter {
-            let _ = app.emit("progress", crate::ProgressEvent {
-                current: total,
-                total,
-                message: "Analysis complete!".to_string()
-            });
-        }
-        
-        println!("✅ Analysis complete!");
+        progress.finish("Analysis complete!");
         Ok((unused_classes, used_classes, by_file))
     }
 

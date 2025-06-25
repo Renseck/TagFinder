@@ -1,9 +1,8 @@
 use walkdir::WalkDir;
 use std::path::{Path, PathBuf};
-use std::sync::{Arc, Mutex};
 use rayon::prelude::*;
+use crate::progress_reporter::ProgressReporter;
 
-use tauri::Emitter;
 
 pub struct FileWalker {
     directory: String,
@@ -76,38 +75,33 @@ impl FileWalker {
 
         let files = self.walk()?;
         let total = files.len();
-        let progress_counter = Arc::new(Mutex::new(0usize));
 
-        // Initial event emission
-        if let Some(app) = &self.progress_emitter {
-            let _ = app.emit("progress", crate::ProgressEvent {
-                current: 0,
-                total,
-                message: format!("Reading {} files...", total)
-            });
+        // Progress reporter - does console logging and event emission 
+        let mut progress = ProgressReporter::new(total, "Reading files".to_string())
+            .with_step_size(std::cmp::max(1, total/20));
+
+        if let Some(ref app) = self.progress_emitter {
+            progress = progress.with_emitter(app.clone());
         }
 
-        println!("📁 Reading {} files using {} threads...", files.len(), pool.current_num_threads());
-        let progress_emitter = self.progress_emitter.clone();
+        // Initial event emission
+        progress.emit_progress(0, &format!("Reading {} files...", total));
+
+        let progress_counter = progress.create_counter();
 
         let results: Result<Vec<_>, Box<dyn std::error::Error + Send + Sync>> = pool.install(|| {
             files
                 .par_iter()
                 .map(|file| -> Result<Option<(PathBuf, String)>, Box<dyn std::error::Error + Send + Sync>> {
-
-                    let mut counter = progress_counter.lock().unwrap();
+                    let current = {
+                        let mut counter = progress_counter.lock().unwrap();
                         *counter += 1;
-                        let current = *counter;
+                        *counter
+                    };
 
-                        if current % 10 == 0 || current == total {
-                            if let Some(ref app) = progress_emitter {
-                                let _ = app.emit("progress", crate::ProgressEvent {
-                                    current,
-                                    total,
-                                    message: format!("Reading file {} of {}...", current, total)
-                                });
-                            }
-                        }
+                    if current % 10 == 0 || current == total {
+                        progress.emit_progress(current, &format!("Reading file {} of {}...", current, total));
+                    }
 
                     match std::fs::read_to_string(file) {
                         Ok(content) => Ok(Some((file.clone(), content))),
@@ -118,6 +112,7 @@ impl FileWalker {
                 .map(|vec| vec.into_iter().flatten().collect())
         });
 
+        progress.finish("File reading complete!");
         results.map_err(|e| -> Box<dyn std::error::Error> { 
             Box::new(std::io::Error::new(std::io::ErrorKind::Other, e.to_string()))
          })
