@@ -1,6 +1,7 @@
 use walkdir::WalkDir;
 use std::path::{Path, PathBuf};
 use rayon::prelude::*;
+use crate::config::Config;
 use crate::progress_reporter::ProgressReporter;
 
 
@@ -8,6 +9,7 @@ pub struct FileWalker {
     directory: String,
     file_filter: Box<dyn Fn(&Path) -> bool + Send + Sync>,
     thread_count: Option<usize>,
+    config: Option<Config>,
     progress_emitter: Option<tauri::AppHandle>,
 }
 
@@ -17,6 +19,7 @@ impl FileWalker {
             directory,
             file_filter: Box::new(|_| true),
             thread_count: None,
+            config: None,
             progress_emitter: None,
         }
     }
@@ -28,6 +31,24 @@ impl FileWalker {
     }
 
     /* ========================================================================================== */
+    pub fn with_config(mut self, config: Config) -> Self {
+        let exclude_dirs = config.scan.exclude_dirs.clone();
+        self.file_filter = Box::new(move |path: &Path| {
+            for component in path.components() {
+                if let Some(dir_name) = component.as_os_str().to_str() {
+                    if exclude_dirs.iter().any(|excluded| excluded == dir_name) {
+                        return false
+                    }
+                }
+            }
+            true
+        });
+
+        self.config = Some(config);
+        self
+    }
+
+    /* ========================================================================================== */
     pub fn with_progress_emitter(mut self, app: tauri::AppHandle) -> Self {
         self.progress_emitter = Some(app);
         self
@@ -35,18 +56,13 @@ impl FileWalker {
 
     /* ========================================================================================== */
     pub fn walk(&self) -> Result<Vec<PathBuf>, Box<dyn std::error::Error>> {
-        let mut files = Vec::new();
-
-        for entry in WalkDir::new(&self.directory)
+        let files: Vec<PathBuf> = WalkDir::new(&self.directory)
             .into_iter()
             .filter_map(|e| e.ok())
             .filter(|e| e.file_type().is_file())
-        {
-            let path = entry.path();
-            if (self.file_filter)(path) {
-                files.push(path.to_path_buf());
-            }
-        }
+            .map(|entry| entry.path().to_path_buf())
+            .filter(|path| (self.file_filter)(path))
+            .collect();
 
         Ok(files)
     }

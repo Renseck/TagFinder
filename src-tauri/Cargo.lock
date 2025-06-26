@@ -3710,6 +3710,7 @@ dependencies = [
  "tauri-plugin-dialog",
  "tauri-plugin-opener",
  "tokio",
+ "toml",
  "walkdir",
 ]
 

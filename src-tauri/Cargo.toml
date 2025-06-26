@@ -30,4 +30,5 @@ rayon = "1.8"
 crossbeam-channel = "0.5"
 num_cpus = "1.16"
 tokio = "1.45.1"
+toml = "0.8"
 

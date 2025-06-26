@@ -3,14 +3,17 @@ use crate::utils::{print_header_line, print_section_line};
 use crate::scanner::FileScanner;
 use crate::file_walker::FileWalker;
 use crate::ProgressReporter;
+use crate::config::Config;
 use std::collections::HashMap;
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
 use rayon::prelude::*;
+use std::sync::{Arc};
 
 pub struct UnusedDetector {
     directory: String,
     thread_count: Option<usize>,
+    config: Option<Config>,
     progress_emitter: Option<tauri::AppHandle>,
 }
 
@@ -33,6 +36,7 @@ impl UnusedDetector {
         Self { 
             directory,
             thread_count: None,
+            config: None,
             progress_emitter: None,
         }
     }
@@ -44,6 +48,12 @@ impl UnusedDetector {
     }
 
     /* ========================================================================================== */
+    pub fn with_config(mut self, config: Config) -> Self {
+        self.config = Some(config);
+        self
+    }
+
+    /* ========================================================================================== */
     pub fn with_progress_emitter(mut self, app: tauri::AppHandle) -> Self {
         self.progress_emitter = Some(app);
         self
@@ -51,22 +61,27 @@ impl UnusedDetector {
 
     /* ========================================================================================== */
     pub fn generate_report(&self) -> Result<UnusedReport, Box<dyn std::error::Error>> {
-        // Read files
+        // Single file walker for all operations
         let mut walker = FileWalker::new(self.directory.clone())
-            .with_extensions(vec!["css", "scss"])
             .with_thread_count(self.thread_count.unwrap_or(num_cpus::get()));
 
         if let Some(ref app) = self.progress_emitter {
             walker = walker.with_progress_emitter(app.clone());
         }
 
-        let files_with_content = walker.walk_with_content_parallel()?;
+        if let Some(config) = &self.config {
+            walker = walker.with_config(config.clone());
+        }
+
+       // Get files and split
+        let all_files_with_content = walker.walk_with_content_parallel()?;
+        let css_files_with_content = self.filter_css_files(all_files_with_content.clone());
 
         // Extract classes
-        let classes = self.extract_classes(files_with_content.clone())?;
+        let classes = self.extract_classes(css_files_with_content)?;
 
         // Check usage status
-        let (unused_classes, used_classes, by_file) = self.analyze_class_usage(&classes)?;
+        let (unused_classes, used_classes, by_file) = self.analyze_class_usage(&classes, all_files_with_content)?;
 
         Ok(UnusedReport {
             total_classes: classes.len(),
@@ -74,6 +89,29 @@ impl UnusedDetector {
             used_classes,
             by_file,
         })
+    }
+
+    /* ========================================================================================== */
+    fn filter_css_files(&self, files_with_content: Vec<(PathBuf, String)>) -> Vec<(PathBuf, String)> {
+        if let Some(config) = &self.config {
+            files_with_content
+                .into_iter()
+                .filter(|(path, _)| config.is_css_file(path))
+                .collect()
+                
+        } else {
+            // Fallback to default CSS extensions if no config
+            files_with_content
+                .into_iter()
+                .filter(|(path, _)| {
+                    if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                        matches!(ext, "css" | "scss")
+                    } else {
+                        false
+                    }
+                })
+                .collect()
+        }
     }
 
     /* ========================================================================================== */
@@ -95,14 +133,10 @@ impl UnusedDetector {
     fn analyze_class_usage(
         &self,
         classes: &[CssClass],
+        all_files_with_content: Vec<(PathBuf, String)>,
     ) -> Result<(Vec<CssClass>, Vec<CssClass>, HashMap<String, Vec<UnusedClass>>), Box<dyn std::error::Error>> {
-        let mut walker = FileWalker::new(self.directory.clone());
-        if let Some(ref app) = self.progress_emitter {
-            walker = walker.with_progress_emitter(app.clone());
-        }
-
-        let files_with_content = walker.walk_with_content_parallel()?;
         let total = classes.len();
+        let files_arc = Arc::new(all_files_with_content);
 
         // Console logger and event emitter
         let mut progress = ProgressReporter::new(total, "Analyzing classes".to_string())
@@ -137,7 +171,7 @@ impl UnusedDetector {
                         progress.emit_progress(current, &format!("Analyzing class {} of {}...", current, total));
                     }
 
-                    let is_unused = self.is_class_unused(class, &files_with_content)?;
+                    let is_unused = self.is_class_unused(class, &files_arc)?;
                     Ok(UnusedClass {
                         class: class.clone(),
                         is_unused,
@@ -173,7 +207,7 @@ impl UnusedDetector {
     }
 
     /* ========================================================================================== */
-    fn is_class_unused(&self, class: &CssClass, files_with_content: &[(PathBuf, String)]) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
+    fn is_class_unused(&self, class: &CssClass, files_with_content: &Arc<Vec<(PathBuf, String)>>) -> Result<bool, Box<dyn std::error::Error + Send + Sync>> {
         let scanner = FileScanner::new();
         let result = scanner.scan(class.name.clone(), files_with_content.to_vec())
             .map_err(|e| format!("Scanner error: {}", e))?;

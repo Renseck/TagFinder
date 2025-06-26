@@ -10,7 +10,7 @@ import {
   isTauri,
   requestPermissions,
   transformCallback
-} from "./chunk-URWMUQW3.js";
+} from "./chunk-XEW3DY3V.js";
 import "./chunk-WDMUDEB6.js";
 export {
   Channel,

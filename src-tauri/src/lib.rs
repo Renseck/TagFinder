@@ -5,6 +5,7 @@ pub mod scanner;
 pub mod text_processor;
 pub mod unused_detector;
 pub mod utils;
+pub mod config;
 
 pub use css_parser::*;
 pub use file_walker::*;
@@ -13,6 +14,7 @@ pub use scanner::{FileScanner, ScanResult};
 pub use text_processor::*;
 pub use unused_detector::*;
 pub use utils::*;
+pub use config::Config;
 
 use tauri::Emitter;
 
@@ -49,8 +51,13 @@ async fn analyze_directory_gui(app: &tauri::AppHandle, directory: &str) -> Resul
         message: "Initializing...".to_string() 
     });
 
+    // Load config
+    let config = Config::load_or_default();
+
     // Detector invokes file walkers as needed
-    let detector = UnusedDetector::new(directory.to_string()).with_progress_emitter(app.clone());
+    let detector = UnusedDetector::new(directory.to_string())
+                                                  .with_progress_emitter(app.clone())
+                                                  .with_config(config);
     detector.generate_report()
 }
 
@@ -63,9 +70,14 @@ async fn find_word_gui(app: &tauri::AppHandle, word: &str, directory: &str) -> R
         message: "Reading files...".to_string() 
     });
     
+    // Load config
+    let config = Config::load_or_default();
+
     // Need to manually invoke walker ourselves
     let mut scanner = FileScanner::new();
-    let mut walker = FileWalker::new(directory.to_string()).with_progress_emitter(app.clone());
+    let mut walker = FileWalker::new(directory.to_string())
+                                            .with_progress_emitter(app.clone())
+                                            .with_config(config);
     let threads = None;
     
     if let Some(thread_count) = threads {
