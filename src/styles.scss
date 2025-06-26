@@ -100,3 +100,18 @@ app-root {
   flex-direction: column;
   min-height: 100vh;
 }
+
+// Snackbar
+.success-snackbar {
+  background: #28a745 !important;
+  color: white !important;
+}
+
+.error-snackbar {
+  background: #dc3545 !important;
+  color: white !important;
+}
+
+.mat-mdc-snack-bar-container {
+  border-radius: 8px !important;
+}

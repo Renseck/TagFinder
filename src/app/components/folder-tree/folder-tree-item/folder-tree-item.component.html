@@ -1,0 +1,39 @@
+<div class="tree-item" [class.excluded]="item.excluded">
+    <div class="item-row">
+    <button 
+        mat-icon-button 
+        class="visibility-btn"
+        (click)="toggleExcluded.emit(item)"
+        [title]="item.excluded ? 'Include in analysis' : 'Exclude from analysis'"
+    >
+        <mat-icon [class.excluded-icon]="item.excluded">
+        {{ item.excluded ? 'visibility_off' : 'visibility' }}
+        </mat-icon>
+    </button>
+    
+    <mat-icon class="folder-icon">folder</mat-icon>
+    
+    <span class="folder-name">{{ item.name }}</span>
+    
+    <button 
+        mat-icon-button 
+        class="expand-btn"
+        *ngIf="item.children && item.children.length > 0"
+        (click)="toggleExpanded.emit(item)"
+    >
+        <mat-icon [class.rotated]="item.expanded">
+        expand_more
+        </mat-icon>
+    </button>
+    </div>
+    
+    <div class="children" *ngIf="item.expanded && item.children" [@slideDown]>
+    <app-folder-tree-item
+        *ngFor="let child of item.children"
+        [item]="child"
+        [excludedDirs]="excludedDirs"
+        (toggleExcluded)="toggleExcluded.emit($event)"
+        (toggleExpanded)="toggleExpanded.emit($event)">
+    </app-folder-tree-item>
+    </div>
+</div>

@@ -1,0 +1,65 @@
+<div class="config-editor-container">
+    <div class="config-header">
+    <h2>Configuration Editor</h2>
+    <p class="config-description">
+        Customize how the CSS Tag Finder analyzes your projects
+    </p>
+    </div>
+
+    <div class="config-sections">
+    <!-- Project Directory Selection -->
+    <section class="config-section">
+        <app-directory-selector 
+        (directorySelected)="onProjectDirectorySelected($event)">
+        </app-directory-selector>
+    </section>
+
+    <!-- Folder Tree -->
+    <section class="config-section" *ngIf="projectPath">
+        <app-folder-tree
+        [projectPath]="projectPath"
+        [excludedDirs]="config.scan.exclude_dirs"
+        (excludedDirsChange)="onExcludedDirsChange($event)">
+        </app-folder-tree>
+    </section>
+
+    <!-- File Type Selector -->
+    <section class="config-section">
+        <app-file-type-selector
+        [selectedFileTypes]="config.scan.include_extensions"
+        (selectedFileTypesChange)="onIncludeExtensionsChange($event)">
+        </app-file-type-selector>
+    </section>
+
+    <!-- CSS Extension Selector -->
+    <section class="config-section">
+        <app-css-extension-selector
+        [selectedCssExtensions]="config.scan.css_extensions"
+        (selectedCssExtensionsChange)="onCssExtensionsChange($event)">
+        </app-css-extension-selector>
+    </section>
+    </div>
+
+    <!-- Save Button -->
+    <div class="config-actions">
+    <button 
+        mat-raised-button 
+        color="primary" 
+        (click)="saveConfig()"
+        [disabled]="saving"
+        class="save-btn"
+    >
+        <mat-icon>save</mat-icon>
+        {{ saving ? 'Saving...' : 'Save Configuration' }}
+    </button>
+    
+    <button 
+        mat-button 
+        (click)="resetToDefaults()"
+        class="reset-btn"
+    >
+        <mat-icon>restore</mat-icon>
+        Reset to Defaults
+    </button>
+    </div>
+</div>

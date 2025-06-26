@@ -1,0 +1,19 @@
+<div class="folder-tree-container">
+    <h3>Project folders</h3>
+    <p class="instructions">Click the eye icon to exclude/include folder from analysis</p>
+
+    <div class="tree-items" *ngIf="directoryItems.length > 0">
+        <div *ngFor="let item of directoryItems" class="tree-item">
+            <app-folder-tree-item
+                [item]="item"
+                [excludedDirs]="excludedDirs"
+                (toggleExcluded)="onToggleExcluded($event)"
+                (toggleExpanded)="onToggleExpanded($event)">
+            </app-folder-tree-item>
+        </div>
+    </div>
+    <div class="no-directory" *ngIf="directoryItems.length === 0">
+        <mat-icon>folder_off</mat-icon>
+        <p>Select a project directory to view its folder structure</p>
+    </div>
+</div>

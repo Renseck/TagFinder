@@ -1,0 +1,74 @@
+.folder-tree-container {
+  margin-bottom: 1rem;
+}
+
+.folder-tree-container h3 {
+  color: var(--text-color);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.instruction {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem 0;
+  font-style: italic;
+}
+
+.tree-items {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tree-item {
+  border-bottom: 1px solid var(--border-color);
+}
+
+.tree-item:last-child {
+  border-bottom: none;
+}
+
+.no-directory {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 2rem;
+  color: #6c757d;
+  text-align: center;
+}
+
+.no-directory mat-icon {
+  font-size: 3rem !important;
+  width: 3rem !important;
+  height: 3rem !important;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.no-directory p {
+  margin: 0;
+  font-style: italic;
+}
+
+/* Loading state */
+.loading-tree {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  color: #6c757d;
+}
+
+.loading-tree mat-icon {
+  animation: spin 1s linear infinite;
+  margin-right: 0.5rem;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

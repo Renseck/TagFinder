@@ -1,9 +1,31 @@
 <main class="container">
       <mat-toolbar class="app-toolbar">
+        <div class="toolbar-left">
+          <button 
+            mat-button 
+            [class.active]="currentView === 'main'"
+            (click)="showMainView()"
+            class="nav-btn"
+          >
+            <mat-icon>home</mat-icon>
+            Main
+          </button>
+          <button 
+            mat-button 
+            [class.active]="currentView === 'config'"
+            (click)="showConfigView()"
+            class="nav-btn"
+          >
+            <mat-icon>settings</mat-icon>
+            Config
+          </button>
+        </div>
+
         <span class="toolbar-spacer"></span>
         <h1>{{ appName }}</h1>
         <small *ngIf="isDevelopment" class="dev-indicator">(DEV)</small>
         <span class="toolbar-spacer"></span>
+
         <!-- Debug toggle button -->
         <button
         *ngIf="isDevelopment"
@@ -18,7 +40,8 @@
         </button>
       </mat-toolbar>
 
-      <div class="content">
+      <!-- Main View -->
+      <div class="content" *ngIf="currentView === 'main'">
         <p class="app-description">Find unused CSS classes and search for specific words in your project</p>
         <app-directory-selector (directorySelected)="onDirectorySelected($event)"></app-directory-selector>
 
@@ -98,6 +121,11 @@
           <p>{{ errorMessage }}</p>
           <button (click)="clearError()" class="clear-error-btn">Dismiss</button>
         </div>
+      </div>
+
+      <!-- Config View -->
+      <div class="content" *ngIf="currentView === 'config'">
+        <app-config-editor></app-config-editor>
       </div>
     </main>
 

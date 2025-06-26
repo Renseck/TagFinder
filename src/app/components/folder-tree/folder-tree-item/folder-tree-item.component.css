@@ -1,0 +1,109 @@
+.tree-item {
+  position: relative;
+}
+
+.tree-item.excluded {
+  opacity: 0.6;
+  background: rgba(231, 76, 60, 0.05);
+}
+
+.item-row {
+  display: flex;
+  align-items: center;
+  padding: 0.75rem 1rem;
+  background: var(--surface-color);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+
+.item-row:hover {
+  background: var(--bg-color);
+}
+
+.visibility-btn {
+  margin-right: 0.75rem;
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.visibility-btn:hover {
+  background: rgba(52, 152, 219, 0.1);
+  transform: scale(1.1);
+}
+
+.visibility-btn mat-icon {
+  font-size: 1.2rem !important;
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+  color: #27ae60;
+  transition: color 0.3s ease;
+}
+
+.visibility-btn mat-icon.excluded-icon {
+  color: #e74c3c;
+}
+
+.folder-icon {
+  margin-right: 0.75rem;
+  color: #f39c12;
+  font-size: 1.3rem !important;
+  width: 1.3rem !important;
+  height: 1.3rem !important;
+}
+
+.folder-name {
+  flex: 1;
+  color: var(--text-color);
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.tree-item.excluded .folder-name {
+  text-decoration: line-through;
+  color: #6c757d;
+}
+
+.expand-btn {
+  min-width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.expand-btn:hover {
+  background: rgba(108, 117, 125, 0.1);
+}
+
+.expand-btn mat-icon {
+  font-size: 1.2rem !important;
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+  color: #6c757d;
+  transition: transform 0.3s ease;
+}
+
+.expand-btn mat-icon.rotated {
+  transform: rotate(180deg);
+}
+
+.children {
+  background: var(--bg-color);
+  border-top: 1px solid var(--border-color);
+  padding-left: 2rem;
+}
+
+.children .tree-item:last-child {
+  border-bottom: none;
+}
+
+/* Nested indentation */
+.children .children {
+  padding-left: 1.5rem;
+}
+
+/* Dark theme adjustments */
+:host-context(.dark-theme) .tree-item.excluded {
+  background: rgba(231, 76, 60, 0.1);
+}

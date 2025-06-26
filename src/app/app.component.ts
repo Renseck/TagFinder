@@ -8,6 +8,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { Subject, takeUntil } from 'rxjs';
 import { listen } from '@tauri-apps/api/event';
 
+import { ConfigEditorComponent } from './components/config-editor/config-editor.component';
 import { DirectorySelectorComponent } from './components/directory-selector/directory-selector.component';
 import { UnusedReportComponent, UnusedReport } from './components/unused-report/unused-report.component';
 import { ScanResultsComponent, ScanResult } from './components/scan-results/scan-results.component';
@@ -29,13 +30,16 @@ import { environment } from '../environments/environment';
     UnusedReportComponent,
     ScanResultsComponent,
     FooterComponent,
-    DebugWindowComponent
+    DebugWindowComponent,
+    ConfigEditorComponent
   ],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent implements OnInit, OnDestroy {
   appName = environment.appName;
+  currentView: 'main' | 'config' = 'main';
+
   selectedDirectory = "";
   searchWord = "";
   loading = false;
@@ -229,6 +233,16 @@ export class AppComponent implements OnInit, OnDestroy {
   toggleTheme(): void {
     this.themeService.toggleTheme();
     this.logToDebug(`[FRONTEND] Theme toggled to ${this.isDarkMode ? 'dark' : 'light'} mode`)
+  }
+
+  /* ============================================================================================ */
+  showMainView() {
+    this.currentView = 'main';
+  }
+
+  /* ============================================================================================ */
+  showConfigView() {
+    this.currentView = 'config';
   }
 
   /* ============================================================================================ */

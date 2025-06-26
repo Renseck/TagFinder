@@ -1,100 +1,124 @@
 {
-  "hash": "fa2d6aa4",
-  "configHash": "900290bc",
+  "hash": "9aefd7fb",
+  "configHash": "b4ba9815",
   "lockfileHash": "64cd7b83",
-  "browserHash": "bca46d26",
+  "browserHash": "b34e34da",
   "optimized": {
     "@angular/common": {
       "src": "../../../../../node_modules/@angular/common/fesm2022/common.mjs",
       "file": "@angular_common.js",
-      "fileHash": "ef6e1ee0",
+      "fileHash": "711929fd",
       "needsInterop": false
     },
     "@angular/core": {
       "src": "../../../../../node_modules/@angular/core/fesm2022/core.mjs",
       "file": "@angular_core.js",
-      "fileHash": "0e192d2c",
+      "fileHash": "fbe76e8d",
       "needsInterop": false
     },
     "@angular/forms": {
       "src": "../../../../../node_modules/@angular/forms/fesm2022/forms.mjs",
       "file": "@angular_forms.js",
-      "fileHash": "7ad55972",
+      "fileHash": "a79fc2b6",
       "needsInterop": false
     },
     "@angular/material/button": {
       "src": "../../../../../node_modules/@angular/material/fesm2022/button.mjs",
       "file": "@angular_material_button.js",
-      "fileHash": "12b9609d",
+      "fileHash": "48ed497b",
+      "needsInterop": false
+    },
+    "@angular/material/checkbox": {
+      "src": "../../../../../node_modules/@angular/material/fesm2022/checkbox.mjs",
+      "file": "@angular_material_checkbox.js",
+      "fileHash": "7c736535",
+      "needsInterop": false
+    },
+    "@angular/material/chips": {
+      "src": "../../../../../node_modules/@angular/material/fesm2022/chips.mjs",
+      "file": "@angular_material_chips.js",
+      "fileHash": "c9d5b800",
       "needsInterop": false
     },
     "@angular/material/icon": {
       "src": "../../../../../node_modules/@angular/material/fesm2022/icon.mjs",
       "file": "@angular_material_icon.js",
-      "fileHash": "b342bf3c",
+      "fileHash": "facb5421",
+      "needsInterop": false
+    },
+    "@angular/material/snack-bar": {
+      "src": "../../../../../node_modules/@angular/material/fesm2022/snack-bar.mjs",
+      "file": "@angular_material_snack-bar.js",
+      "fileHash": "92839985",
       "needsInterop": false
     },
     "@angular/material/toolbar": {
       "src": "../../../../../node_modules/@angular/material/fesm2022/toolbar.mjs",
       "file": "@angular_material_toolbar.js",
-      "fileHash": "49bc0670",
+      "fileHash": "c7664d70",
       "needsInterop": false
     },
     "@angular/platform-browser": {
       "src": "../../../../../node_modules/@angular/platform-browser/fesm2022/platform-browser.mjs",
       "file": "@angular_platform-browser.js",
-      "fileHash": "f8898f12",
+      "fileHash": "56cc3f4e",
       "needsInterop": false
     },
     "@angular/platform-browser/animations/async": {
       "src": "../../../../../node_modules/@angular/platform-browser/fesm2022/animations/async.mjs",
       "file": "@angular_platform-browser_animations_async.js",
-      "fileHash": "8bb47b16",
+      "fileHash": "5890956b",
       "needsInterop": false
     },
     "@angular/router": {
       "src": "../../../../../node_modules/@angular/router/fesm2022/router.mjs",
       "file": "@angular_router.js",
-      "fileHash": "8d6eab26",
+      "fileHash": "2c498b0e",
       "needsInterop": false
     },
     "@tauri-apps/api/core": {
       "src": "../../../../../node_modules/@tauri-apps/api/core.js",
       "file": "@tauri-apps_api_core.js",
-      "fileHash": "8cf1e5e2",
+      "fileHash": "a27f8cf6",
       "needsInterop": false
     },
     "@tauri-apps/api/event": {
       "src": "../../../../../node_modules/@tauri-apps/api/event.js",
       "file": "@tauri-apps_api_event.js",
-      "fileHash": "1fbe2ea5",
+      "fileHash": "a4f23c93",
       "needsInterop": false
     },
     "@tauri-apps/plugin-dialog": {
       "src": "../../../../../node_modules/@tauri-apps/plugin-dialog/dist-js/index.js",
       "file": "@tauri-apps_plugin-dialog.js",
-      "fileHash": "907ffdd9",
+      "fileHash": "ac78fe06",
       "needsInterop": false
     },
     "rxjs": {
       "src": "../../../../../node_modules/rxjs/dist/esm5/index.js",
       "file": "rxjs.js",
-      "fileHash": "28e02e62",
+      "fileHash": "fc105442",
       "needsInterop": false
     }
   },
   "chunks": {
-    "browser-KMXIHFEN": {
-      "file": "browser-KMXIHFEN.js"
-    },
-    "chunk-OQHZDAZY": {
-      "file": "chunk-OQHZDAZY.js"
-    },
-    "chunk-AURJKZC5": {
-      "file": "chunk-AURJKZC5.js"
+    "browser-LEOF4T47": {
+      "file": "browser-LEOF4T47.js"
     },
     "chunk-XEW3DY3V": {
       "file": "chunk-XEW3DY3V.js"
+    },
+    "chunk-DXVYVE7G": {
+      "file": "chunk-DXVYVE7G.js"
+    },
+    "chunk-5WHAPJV6": {
+      "file": "chunk-5WHAPJV6.js"
+    },
+    "chunk-IMZILDRE": {
+      "file": "chunk-IMZILDRE.js"
+    },
+    "chunk-CJAEDJKE": {
+      "file": "chunk-CJAEDJKE.js"
     },
     "chunk-VMOD6FLH": {
       "file": "chunk-VMOD6FLH.js"

@@ -1,0 +1,15 @@
+<div class="file-type-container">
+    <h3>File Types to Analyze</h3>
+    <p class="instruction">Select which file types should be scanned for CSS class usage</p>
+    
+    <div class="file-type-grid">
+    <mat-checkbox
+        *ngFor="let fileType of availableFileTypes"
+        [checked]="selectedFileTypes.includes(fileType)"
+        (change)="onFileTypeToggle(fileType, $event.checked)"
+        class="file-type-checkbox"
+    >
+        <span class="file-extension">.{{ fileType }}</span>
+    </mat-checkbox>
+    </div>
+</div>

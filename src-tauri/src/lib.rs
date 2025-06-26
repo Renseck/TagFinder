@@ -17,12 +17,23 @@ pub use utils::*;
 pub use config::Config;
 
 use tauri::Emitter;
+use std::fs;
+use std::path::{Path};
+use serde::{Serialize};
 
-#[derive(Clone, serde::Serialize)]
+#[derive(Clone, Serialize)]
 pub struct ProgressEvent {
     pub current: usize,
     pub total: usize,
     pub message: String,
+}
+
+#[derive(Clone, Serialize)]
+pub struct DirectoryItem {
+    name: String,
+    path: String,
+    is_directory: bool,
+    children: Option<Vec<DirectoryItem>>,
 }
 
 /* ======================================= Tauri wrappers ======================================= */
@@ -40,6 +51,78 @@ async fn find_word_in_files(app: tauri::AppHandle, word: String, directory: Stri
         Ok(result) => Ok(result),
         Err(e) => Err(format!("Error finding word: {}", e)),
     }
+}
+
+#[tauri::command]
+async fn load_config() -> Result<Config, String> {
+    match Config::load_or_default() {
+        config => Ok(config),
+    }
+}
+
+#[tauri::command]
+async fn save_config(config: Config) -> Result<(), String> {
+    let config_path = "tag-finder.toml";
+    let toml_string = toml::to_string(&config)
+        .map_err(|e| format!("Failed to serialize config: {}", e))?;
+    
+    fs::write(config_path, toml_string)
+        .map_err(|e| format!("Failed to write config file: {}", e))?;
+    
+    Ok(())
+}
+
+#[tauri::command]
+async fn get_directory_structure(path: String) -> Result<Vec<DirectoryItem>, String> {
+    let path = Path::new(&path);
+    if !path.exists() || !path.is_dir() {
+        return Err("Invalid directory path".to_string());
+    }
+
+    get_directory_items(path, 2) // Limit depth to 2 levels initially
+        .map_err(|e| format!("Failed to read directory: {}", e))
+}
+
+fn get_directory_items(dir: &Path, max_depth: usize) -> Result<Vec<DirectoryItem>, std::io::Error> {
+    if max_depth == 0 {
+        return Ok(vec![]);
+    }
+
+    let mut items = Vec::new();
+    let entries = fs::read_dir(dir)?;
+
+    for entry in entries {
+        let entry = entry?;
+        let path = entry.path();
+        let name = entry.file_name().to_string_lossy().to_string();
+        
+        // Skip hidden files and common uninteresting directories
+        if name.starts_with('.') && !matches!(name.as_str(), ".git" | ".vscode" | ".idea") {
+            continue;
+        }
+
+        if path.is_dir() {
+            let children = if max_depth > 1 {
+                Some(get_directory_items(&path, max_depth - 1)?)
+            } else {
+                None
+            };
+
+            items.push(DirectoryItem {
+                name,
+                path: path.to_string_lossy().to_string(),
+                is_directory: true,
+                children,
+            });
+        }
+    }
+
+    // Sort directories first, then by name
+    items.sort_by(|a, b| {
+        a.name.to_lowercase().cmp(&b.name.to_lowercase())
+    });
+
+    Ok(items)
 }
 
 /* =============================== Some clean wrappers for the GUI ============================== */
@@ -106,7 +189,10 @@ pub fn run() {
     builder
         .invoke_handler(tauri::generate_handler![
             find_unused_css_tags,
-            find_word_in_files
+            find_word_in_files,
+            load_config,
+            save_config,
+            get_directory_structure
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

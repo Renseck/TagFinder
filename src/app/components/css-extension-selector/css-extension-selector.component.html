@@ -1,0 +1,16 @@
+<div class="css-extension-container">
+    <h3>CSS File Extensions</h3>
+    <p class="instruction">Select which file types contain CSS classes to analyze</p>
+    
+    <div class="css-extension-grid">
+    <mat-checkbox
+        *ngFor="let extension of availableCssExtensions"
+        [checked]="selectedCssExtensions.includes(extension)"
+        (change)="onCssExtensionToggle(extension, $event.checked)"
+        class="css-extension-checkbox"
+    >
+        <span class="css-extension-name">.{{ extension }}</span>
+        <span class="css-extension-desc">{{ getExtensionDescription(extension) }}</span>
+    </mat-checkbox>
+    </div>
+</div>

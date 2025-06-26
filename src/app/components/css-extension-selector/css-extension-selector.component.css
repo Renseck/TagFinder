@@ -1,0 +1,102 @@
+.css-extension-container {
+  margin-bottom: 1rem;
+}
+
+.css-extension-container h3 {
+  color: var(--text-color);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.instruction {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem 0;
+  font-style: italic;
+}
+
+.css-extension-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.css-extension-checkbox {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.css-extension-checkbox:hover {
+  background: var(--surface-color);
+  border-color: #e74c3c;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(231, 76, 60, 0.2);
+}
+
+.css-extension-checkbox.mat-mdc-checkbox-checked {
+  background: rgba(231, 76, 60, 0.1);
+  border-color: #e74c3c;
+}
+
+.css-extension-name {
+  font-weight: 600;
+  color: var(--text-color);
+  font-family: 'Courier New', monospace;
+  font-size: 1rem;
+}
+
+.css-extension-desc {
+  color: #6c757d;
+  font-size: 0.8rem;
+  margin-top: 0.25rem;
+}
+
+.selected-summary {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.selected-summary h4 {
+  color: var(--text-color);
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.css-chip {
+  background: #e74c3c;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .css-extension-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .css-extension-checkbox {
+    padding: 0.75rem;
+  }
+}

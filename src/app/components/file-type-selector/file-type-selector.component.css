@@ -1,0 +1,94 @@
+.file-type-container {
+  margin-bottom: 1rem;
+}
+
+.file-type-container h3 {
+  color: var(--text-color);
+  margin: 0 0 0.5rem 0;
+  font-size: 1.3rem;
+  font-weight: 500;
+}
+
+.instruction {
+  color: #6c757d;
+  font-size: 0.9rem;
+  margin: 0 0 1.5rem 0;
+  font-style: italic;
+}
+
+.file-type-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.file-type-checkbox {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 0.75rem;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.file-type-checkbox:hover {
+  background: var(--surface-color);
+  border-color: #3498db;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
+}
+
+.file-type-checkbox.mat-mdc-checkbox-checked {
+  background: rgba(52, 152, 219, 0.1);
+  border-color: #3498db;
+}
+
+.file-extension {
+  font-weight: 600;
+  color: var(--text-color);
+  font-family: 'Courier New', monospace;
+  font-size: 0.9rem;
+}
+
+.selected-summary {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.selected-summary h4 {
+  color: var(--text-color);
+  margin: 0 0 0.75rem 0;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+.selected-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.extension-chip {
+  background: #3498db;
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 16px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  font-family: 'Courier New', monospace;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .file-type-grid {
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 0.5rem;
+  }
+
+  .file-type-checkbox {
+    padding: 0.5rem;
+  }
+}
