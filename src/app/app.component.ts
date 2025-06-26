@@ -15,6 +15,7 @@ import { ScanResultsComponent, ScanResult } from './components/scan-results/scan
 import { FooterComponent } from './components/footer/footer.component';
 import { DebugWindowComponent } from './components/debug-window/debug-window.component';
 import { ThemesService } from './services/themes/themes.service';
+import { LoggingService } from './services/logging/logging.service';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -67,12 +68,13 @@ export class AppComponent implements OnInit, OnDestroy {
   /* ============================================================================================ */
   constructor(
     private themeService: ThemesService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private logger: LoggingService
   ) {}
 
   /* ======================================== ng funtions ======================================= */
   async ngOnInit(): Promise<void> {
-    this.logToDebug("[FRONTEND] App initializing");
+    this.logger.info('APP', 'Application initializing');
 
     this.themeService.isDarkMode$
       .pipe(takeUntil(this.destroy$))
@@ -82,9 +84,9 @@ export class AppComponent implements OnInit, OnDestroy {
 
     if (this.isTauriAvailable()) {
       try {
-        this.logToDebug("[FRONTEND] Setting up Tauri event listener");
+        this.logger.debug('APP', 'Setting up Tauri event listener');
         await listen('progress', async (event: any) => {
-          this.logToDebug(`[BACKEND] Progress event received: ${JSON.stringify(event.payload)}`);
+          this.logger.debug('BACKEND', 'Progress event received', event.payload);
           const { current, total, message } = event.payload;
           this.progressCurrent = current;
           this.progressTotal = total;
@@ -92,12 +94,12 @@ export class AppComponent implements OnInit, OnDestroy {
 
           this.cdr.detectChanges();
         });
-        this.logToDebug("[FRONTEND] Tauri event listener setup complete");
+        this.logger.info('APP', 'Tauri event listener setup complete');
       } catch (error) {
-        this.logToDebug("[FRONTEND] Could not setup Tauri event listener");
+        this.logger.error('APP', 'Could not setup Tauri event listener', error);
       }
     } else {
-      this.logToDebug("[FRONTEND] Tauri not available - running in web mode");
+      this.logger.warn('APP', 'Tauri not available - running in web mode');
     }
   }
 
@@ -109,12 +111,12 @@ export class AppComponent implements OnInit, OnDestroy {
   /* ============================================================================================ */
   onDirectorySelected(directory: string): void {
     this.selectedDirectory = directory;
-    this.logToDebug(`[FRONTEND] Directory selected: ${directory}`);
+    this.logger.info('APP', `Directory selected: ${directory}`);
 
     // Clear previous results when directory changes
     if (this.showResults) {
       this.clearResults();
-      this.logToDebug(`[FRONTEND] Cleared previous results due to directory change`);
+      this.logger.debug('APP', 'Cleared previous results due to directory change');
     }
   }
 
@@ -122,7 +124,7 @@ export class AppComponent implements OnInit, OnDestroy {
   async findUnusedCssTags() {
     if (!this.selectedDirectory) return;
 
-    this.logToDebug(`[FRONTEND] Starting unused CSS scan`);
+    this.logger.info('APP', 'Starting unused CSS scan');
     this.loading = true;
     this.currentAction = "unused";
     this.clearResults();
@@ -130,19 +132,19 @@ export class AppComponent implements OnInit, OnDestroy {
     this.resetProgress();
 
     try {
-      this.logToDebug(`[FRONTEND] Invoking find_unused_css_tags comman`);
+      this.logger.debug('APP', 'Invoking find_unused_css_tags command');
       this.unusedResults = await invoke<UnusedReport>("find_unused_css_tags", { 
         directory: this.selectedDirectory 
       });
-      this.logToDebug(`[FRONTEND] Received results with ${this.unusedResults.total_classes} total classes`);
+      this.logger.info('APP', `Received results with ${this.unusedResults.total_classes} total classes`);
       this.showResults = true;
       
     } catch (error) {
-      this.logToDebug(`[FRONTEND] Error: ${error}`);
+      this.logger.error('APP', 'Unused CSS scan failed', error);
       this.showError(`Failed to find unused CSS tags: ${error}`);
 
     } finally {
-      this.logToDebug(`[FRONTEND] Cleaning up unused CSS scan`);
+      this.logger.debug('APP', 'Cleaning up unused CSS scan');
       this.loading = false;
       this.currentAction = '';
       this.resetProgress();
@@ -153,7 +155,7 @@ export class AppComponent implements OnInit, OnDestroy {
   async findWordInFiles() {
     if (!this.selectedDirectory) return;
 
-    this.logToDebug(`[FRONTEND] Starting word search for "${this.searchWord}"`);
+    this.logger.info('APP', `Starting word search for "${this.searchWord}"`);
     this.loading = true;
     this.currentAction = "word";
     this.clearResults();
@@ -161,21 +163,21 @@ export class AppComponent implements OnInit, OnDestroy {
     this.resetProgress();
 
     try {
-      this.logToDebug(`[FRONTEND] Invoking find_word_in_files command`);
+      this.logger.debug('APP', 'Invoking find_word_in_files command');
       this.wordResults = await invoke<ScanResult>("find_word_in_files", { 
         word: this.searchWord,
         directory: this.selectedDirectory 
       });
       
       this.showResults = true;
-      this.logToDebug(`[FRONTEND] Word search result: ${JSON.stringify(this.wordResults)}`);
+      this.logger.info('APP', 'Word search completed successfully', this.wordResults);
 
     } catch (error) {
-      this.logToDebug(`[FRONTEND] Word search failed: ${error}`);
+      this.logger.error('APP', 'Word search failed', error);
       this.showError(`Failed to search for word: ${error}`);
 
     } finally {
-      this.logToDebug(`[FRONTEND] Cleaning up word search`);
+      this.logger.debug('APP', 'Cleaning up word search');
       this.loading = false;
       this.currentAction = '';
       this.resetProgress();
@@ -211,6 +213,7 @@ export class AppComponent implements OnInit, OnDestroy {
   /* ============================================================================================ */
   showError(message: string): void {
     this.errorMessage = message;
+    this.logger.error('APP', `Error displayed to user: ${message}`);
   }
 
   /* ============================================================================================ */
@@ -220,48 +223,37 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /* ============================================================================================ */
   clearDebugLogs(): void {
+    this.logger.clearLogs();
     this.debugLogs = [];
   }
 
   /* ============================================================================================ */
   toggleDebugWindow(): void {
     this.showDebugWindow = !this.showDebugWindow;
-    this.logToDebug(`[FRONTEND] Debug window ${this.showDebugWindow ? 'opened' : 'closed'}`);
+    this.logger.debug('APP', `Debug window ${this.showDebugWindow ? 'opened' : 'closed'}`);
   }
 
   /* ============================================================================================ */
   toggleTheme(): void {
     this.themeService.toggleTheme();
-    this.logToDebug(`[FRONTEND] Theme toggled to ${this.isDarkMode ? 'dark' : 'light'} mode`)
+    this.logger.info('APP', `Theme toggled to ${this.isDarkMode ? 'dark' : 'light'} mode`);
   }
 
   /* ============================================================================================ */
   showMainView() {
     this.currentView = 'main';
+    this.logger.debug('APP', 'Switched to main view');
   }
 
   /* ============================================================================================ */
   showConfigView() {
     this.currentView = 'config';
+    this.logger.debug('APP', 'Switched to config view');
   }
 
   /* ============================================================================================ */
   private isTauriAvailable(): boolean {
     return typeof window !== 'undefined' && 
            (window as any).__TAURI_INTERNALS__ !== undefined;
-  }
-
-  /* ============================================================================================ */
-  private logToDebug(message: string): void {
-    const timestamp = new Date().toISOString();
-    const logMessage = `${timestamp}: ${message}\n`;
-    this.debugLogs.push(logMessage);
-
-    // Keep only 100 latest entries
-    if (this.debugLogs.length > 100) {
-      this.debugLogs= this.debugLogs.slice(-100);
-    }
-
-    console.log(logMessage);
   }
 }

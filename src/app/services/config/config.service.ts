@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { invoke } from '@tauri-apps/api/core';
+import { LoggingService } from '../logging/logging.service';
 
 export interface ConfigData {
   scan: {
@@ -23,14 +24,19 @@ export interface DirectoryItem {
 })
 export class ConfigService {
 
-  constructor() { }
+  constructor(private logger: LoggingService) { }
 
   /* ============================================================================================ */
   async loadConfig(): Promise<ConfigData> {
+    this.logger.debug('CONFIG_SERVICE', 'Loading configuration from backend');
+
     try {
-      return await invoke<ConfigData>('load_config');
+      const config = await invoke<ConfigData>('load_config');
+      this.logger.info('CONFIG_SERVICE', 'Configuration loaded successfully');
+      return config;
+      
     } catch (error) {
-      console.error('Failed to load config:', error);
+      this.logger.error('CONFIG_SERVICE', 'Failed to load config from backend', error);
       // Return default config
       return {
         scan: {
@@ -44,16 +50,19 @@ export class ConfigService {
 
   /* ============================================================================================ */
   async saveConfig(config: ConfigData): Promise<void> {
+    this.logger.debug('CONFIG_SERVICE', 'Saving configuration to backend', config);
     try {
       await invoke('save_config', { config });
+      this.logger.info('CONFIG_SERVICE', 'Configuration saved successfully');
     } catch(error) {
-      console.error('Failed to save config:', error);
+      this.logger.error('CONFIG_SERVICE', 'Failed to save config to backend', error);
       throw error;
     }
   }
 
   /* ============================================================================================ */
   async getDirectoryStructure(path: string): Promise<DirectoryItem[]> {
+    this.logger.debug('CONFIG_SERVICE', `Getting directory structure for: ${path}`);
     try {
       return await invoke<DirectoryItem[]>('get_directory_structure', { path });
     } catch (error) {

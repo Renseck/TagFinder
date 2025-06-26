@@ -99,34 +99,125 @@
     scroll-behavior: smooth;
 }
 
-.log-entry {
-    display: flex;
-    margin-bottom: 0.25rem;
-    padding: 0.25rem 0.5rem;
-    background: var(--background-color);
-    border-radius: 3px;
-    border-left: 3px solid var(--border-color);
-    font-size: 0.75rem;
-    line-height: 1.4;
-    transition: all 0.2s ease;
+.log-entry.structured {
+  display: flex;
+  align-items: flex-start;
+  margin-bottom: 0.5rem;
+  padding: 0.75rem;
+  background: var(--background-color);
+  border-radius: 6px;
+  border-left: 3px solid var(--border-color);
+  font-size: 0.8rem;
+  line-height: 1.4;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.log-entry.structured:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
 .log-entry.recent {
-    border-left-color: var(--success-color);
-    background: var(--success-background);
+  border-left-color: var(--success-color);
+  background: var(--success-background);
+}
+
+.log-entry.error {
+  border-left-color: #e74c3c;
+  background: rgba(231, 76, 60, 0.05);
+}
+
+.log-entry.warn {
+  border-left-color: #f39c12;
+  background: rgba(243, 156, 18, 0.05);
+}
+
+.log-entry.debug {
+  border-left-color: #95a5a6;
+  background: rgba(149, 165, 166, 0.05);
+}
+
+.log-entry.progress {
+  border-left-color: #27ae60;
+  background: rgba(39, 174, 96, 0.05);
+}
+
+.log-level-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  margin-right: 0.75rem;
+  flex-shrink: 0;
+}
+
+.log-level-badge mat-icon {
+  color: white;
+  font-size: 1rem !important;
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.log-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.25rem;
+  flex-wrap: wrap;
 }
 
 .log-timestamp {
-    color: var(--text-muted);
-    margin-right: 0.75rem;
-    min-width: 80px;
-    font-size: 0.7rem;
+  color: var(--text-muted);
+  font-size: 0.7rem;
+  font-family: monospace;
+  min-width: 80px;
+}
+
+.log-component {
+  font-weight: 600;
+  font-size: 0.75rem;
+  padding: 0.1rem 0.4rem;
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.log-level-text {
+  font-weight: 600;
+  font-size: 0.7rem;
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  background: rgba(0, 0, 0, 0.05);
 }
 
 .log-message {
-    color: var(--text-color);
-    flex: 1;
-    word-break: break-word;
+  color: var(--text-color);
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.log-data {
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: var(--code-background);
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
+}
+
+.log-data pre {
+  margin: 0;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  white-space: pre-wrap;
+  word-break: break-word;
 }
 
 .no-logs {
@@ -136,20 +227,42 @@
     font-style: italic;
 }
 
-/* Animation when new entries are added */
-.log-entry:nth-last-child(1):not(.no-logs) {
-    animation: newMessage 0.5s ease-out;
+/* Dark theme adjustments */
+:host-context(.dark-theme) .log-component,
+:host-context(.dark-theme) .log-level-text {
+  background: rgba(255, 255, 255, 0.1);
 }
 
-@keyframes newMessage {
-    0% {
-        transform: translateX(-20px);
-        opacity: 0;
-    }
-    100% {
-        transform: translateX(0);
-        opacity: 1;
-    }
+:host-context(.dark-theme) .log-entry.error {
+  background: rgba(231, 76, 60, 0.1);
+}
+
+:host-context(.dark-theme) .log-entry.warn {
+  background: rgba(243, 156, 18, 0.1);
+}
+
+:host-context(.dark-theme) .log-entry.debug {
+  background: rgba(149, 165, 166, 0.1);
+}
+
+:host-context(.dark-theme) .log-entry.progress {
+  background: rgba(39, 174, 96, 0.1);
+}
+
+/* Animation for new entries */
+.log-entry.structured:last-child {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+@keyframes slideInFromBottom {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
 }
 
 /* Enhanced hover effect for recent messages */

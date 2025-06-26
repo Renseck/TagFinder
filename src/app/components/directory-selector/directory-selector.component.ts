@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { MatIconModule } from '@angular/material/icon';
 import { open } from '@tauri-apps/plugin-dialog';
+import { LoggingService } from '../../services/logging/logging.service';
 
 @Component({
   selector: 'app-directory-selector',
@@ -19,7 +20,11 @@ export class DirectorySelectorComponent {
   @Output() directorySelected = new EventEmitter<string>();
 
   /* ============================================================================================ */
+  constructor(private logger: LoggingService) {}
+
+  /* ============================================================================================ */
   async selectDirectory(): Promise<void> {
+    this.logger.debug('DIRECTORY_SELECTOR', 'Opening directory dialog');
     this.isSelecting = true;
     this.errorMessage = '';
 
@@ -35,9 +40,10 @@ export class DirectorySelectorComponent {
       if (selected && typeof selected === 'string') {
         this.selectedDirectory = selected;
         this.directorySelected.emit(selected);
+        this.logger.info('DIRECTORY_SELECTOR', `Directory selected: ${selected}`);
       }
     } catch (error) {
-      console.error('Error selecting directory:', error);
+      this.logger.error('DIRECTORY_SELECTOR', 'Failed to open directory dialog', error);
       this.errorMessage = "Native file dialog not available. Using fallback.";
       
       // Fallback to prompt if dialog fails
@@ -58,6 +64,7 @@ export class DirectorySelectorComponent {
 
   /* ============================================================================================ */
   clearDirectory(): void {
+    this.logger.debug('DIRECTORY_SELECTOR', 'Clearing directory selection');
     this.selectedDirectory = '';
     this.directorySelected.emit('');
   }
