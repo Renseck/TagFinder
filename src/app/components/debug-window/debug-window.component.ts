@@ -83,7 +83,7 @@ export class DebugWindowComponent implements OnInit, OnDestroy,AfterViewChecked 
         message: log.message,
         data: log.data,
         isStructured: true,
-        rawLog: this.formatStructuredLog(log)
+        rawLog: this.formatStructuredLog(log),
       });
     });
 
@@ -100,7 +100,7 @@ export class DebugWindowComponent implements OnInit, OnDestroy,AfterViewChecked 
         component: component || 'SYSTEM',
         message,
         isStructured: false,
-        rawLog: log
+        rawLog: log,
       });
     });
 

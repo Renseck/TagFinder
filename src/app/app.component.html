@@ -21,23 +21,26 @@
           </button>
         </div>
 
-        <span class="toolbar-spacer"></span>
-        <h1>{{ appName }}</h1>
-        <small *ngIf="isDevelopment" class="dev-indicator">(DEV)</small>
-        <span class="toolbar-spacer"></span>
+        <div class="toolbar-center">
+          <h1>{{ appName }}</h1>
+          <small *ngIf="isDevelopment" class="dev-indicator">(DEV)</small>
+        </div>
+        
+        <div class="toolbar-right">
+          <!-- Debug toggle button -->
+          <button
+          *ngIf="isDevelopment"
+            class="debug-toggle-btn"
+            (click)="toggleDebugWindow()"
+            title="Toggle Debug Window">
+            <mat-icon>bug_report</mat-icon>
+          </button>
 
-        <!-- Debug toggle button -->
-        <button
-        *ngIf="isDevelopment"
-          class="debug-toggle-btn"
-          (click)="toggleDebugWindow()"
-          title="Toggle Debug Window">
-          <mat-icon>bug_report</mat-icon>
-        </button>
-
-        <button mat-icon-button (click)="toggleTheme()" class="theme-toggle">
-          <mat-icon>{{ isDarkMode ? 'wb_sunny' : 'nights_stay' }}</mat-icon>
-        </button>
+          <!-- Theme toggle button -->
+          <button mat-icon-button (click)="toggleTheme()" class="theme-toggle">
+            <mat-icon>{{ isDarkMode ? 'wb_sunny' : 'nights_stay' }}</mat-icon>
+          </button>
+        </div>
       </mat-toolbar>
 
       <!-- Main View -->

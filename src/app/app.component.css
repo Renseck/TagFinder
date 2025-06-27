@@ -31,11 +31,43 @@ h1, h2, h3, h4, h5, h6 {
   color: var(--text-color) !important;
   border-bottom: 1px solid var(--border-color);
   margin-bottom: 2rem;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  position: relative !important;
 }
 
 .toolbar-left {
   display: flex;
   gap: 0.5rem;
+  flex: 1;
+  justify-content: flex-start;
+}
+
+.toolbar-center {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 1;
+}
+
+.toolbar-center h1 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: var(--text-color);
+}
+
+.toolbar-right {
+  display: flex;
+  gap: 0.5rem;
+  flex: 1;
+  justify-content: flex-end;
+  align-items: center;
 }
 
 .nav-btn {
@@ -88,10 +120,6 @@ h1, h2, h3, h4, h5, h6 {
 
 .nav-btn mat-icon {
   font-size: 1.2rem;
-}
-
-.toolbar-spacer {
-  flex: 1 1 auto;
 }
 
 .theme-toggle {
@@ -331,8 +359,53 @@ h1, h2, h3, h4, h5, h6 {
   .container {
     padding-bottom: 6rem; /* More space on mobile for footer */
   }
+
+  .toolbar-center h1 {
+    font-size: 1.2rem;
+  }
+  
+  .nav-btn {
+    padding: 0.4rem 0.8rem;
+    font-size: 0.9rem;
+  }
+  
+  .nav-btn mat-icon {
+    font-size: 1rem;
+  }
+  
+  .debug-toggle-btn {
+    min-width: 36px;
+    min-height: 36px;
+  }
+  
+  .debug-toggle-btn mat-icon {
+    font-size: 1.5rem !important;
+    width: 1.5rem !important;
+    height: 1.5rem !important;
+  }
 }
 
+/* Ensure the title doesn't get covered by buttons on very small screens */
+@media (max-width: 600px) {
+  .toolbar-left,
+  .toolbar-right {
+    flex: 0 0 auto;
+  }
+  
+  .toolbar-center {
+    position: static;
+    transform: none;
+    flex: 1;
+    justify-content: center;
+  }
+  
+  .app-toolbar {
+    flex-wrap: wrap;
+    min-height: 64px;
+  }
+}
+
+/* ============================================= Dev ============================================ */
 .dev-indicator {
   background: #ff6b35;
   color: white;
