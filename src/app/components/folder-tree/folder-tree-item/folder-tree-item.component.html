@@ -3,7 +3,7 @@
     <button 
         mat-icon-button 
         class="visibility-btn"
-        (click)="toggleExcluded.emit(item)"
+        (click)="onToggleExcluded($event)"
         [title]="item.excluded ? 'Include in analysis' : 'Exclude from analysis'"
     >
         <mat-icon [class.excluded-icon]="item.excluded">
@@ -19,7 +19,7 @@
         mat-icon-button 
         class="expand-btn"
         *ngIf="item.children && item.children.length > 0"
-        (click)="toggleExpanded.emit(item)"
+        (click)="onToggleExpanded($event)"
     >
         <mat-icon [class.rotated]="item.expanded">
         expand_more
@@ -32,8 +32,8 @@
         *ngFor="let child of item.children"
         [item]="child"
         [excludedDirs]="excludedDirs"
-        (toggleExcluded)="toggleExcluded.emit($event)"
-        (toggleExpanded)="toggleExpanded.emit($event)">
+        (toggleExcluded)="onChildToggleExcluded($event)"
+        (toggleExpanded)="onChildToggleExpanded($event)">
     </app-folder-tree-item>
     </div>
 </div>

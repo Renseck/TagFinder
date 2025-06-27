@@ -16,6 +16,24 @@
   font-style: italic;
 }
 
+.loading-indicator {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem;
+  color: #6c757d;
+  justify-content: center;
+}
+
+.loading-indicator .spinning {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
 .tree-items {
   background: var(--bg-color);
   border: 1px solid var(--border-color);
@@ -52,23 +70,4 @@
 .no-directory p {
   margin: 0;
   font-style: italic;
-}
-
-/* Loading state */
-.loading-tree {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 2rem;
-  color: #6c757d;
-}
-
-.loading-tree mat-icon {
-  animation: spin 1s linear infinite;
-  margin-right: 0.5rem;
-}
-
-@keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
 }

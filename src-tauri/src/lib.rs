@@ -79,7 +79,7 @@ async fn get_directory_structure(path: String) -> Result<Vec<DirectoryItem>, Str
         return Err("Invalid directory path".to_string());
     }
 
-    get_directory_items(path, 2) // Limit depth to 2 levels initially
+    get_directory_items(path, 3) // Limit depth to 2 levels initially
         .map_err(|e| format!("Failed to read directory: {}", e))
 }
 

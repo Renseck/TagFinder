@@ -91,21 +91,26 @@ export class ConfigEditorComponent implements OnInit {
   async saveConfig() {
     this.logger.info('CONFIG_EDITOR', 'Saving configuration');
     this.saving = true;
+
     try {
       await this.configService.saveConfig(this.config);
       this.logger.info('CONFIG_EDITOR', 'Configuration saved successfully');
+
       this.snackBar.open('Configuration saved successfully!', 'Close', { 
         duration: 3000,
         panelClass: ['success-snackbar']
       });
+
     } catch (error) {
       this.logger.error('CONFIG_EDITOR', 'Failed to save configuration', error);
       this.snackBar.open('Failed to save configuration', 'Close', { 
         duration: 3000,
         panelClass: ['error-snackbar']
       });
+
     } finally {
       this.saving = false;
+      this.logger.debug('CONFIG_EDITOR', 'Save operation finished');
     }
   }
 

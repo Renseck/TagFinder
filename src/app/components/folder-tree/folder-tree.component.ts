@@ -4,6 +4,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatButton, MatButtonModule } from '@angular/material/button';
 import { DirectoryItem, ConfigService } from '../../services/config/config.service';
 import { FolderTreeItemComponent } from './folder-tree-item/folder-tree-item.component';
+import { LoggingService } from '../../services/logging/logging.service';
 
 @Component({
   selector: 'app-folder-tree',
@@ -26,11 +27,15 @@ export class FolderTreeComponent implements OnChanges{
   loading = false;
 
   /* ============================================================================================ */
-  constructor(private configService: ConfigService) {}
+  constructor(
+    private configService: ConfigService,
+    private logger: LoggingService
+  ) {}
 
   /* ============================================================================================ */
   async ngOnChanges(changes: SimpleChanges) {
       if (changes['projectPath'] && this.projectPath) {
+        this.logger.debug('FOLDER_TREE', `Project path changed to: ${this.projectPath}`);
         await this.loadDirectoryStructure();
       }
   }
@@ -39,12 +44,14 @@ export class FolderTreeComponent implements OnChanges{
   async loadDirectoryStructure() {
     if (!this.projectPath) return;
 
+    this.logger.debug('FOLDER_TREE', 'Loading directory structure');
     this.loading = true;
     try {
       this.directoryItems = await this.configService.getDirectoryStructure(this.projectPath);
       this.markExcludedDirectories(this.directoryItems);
+      this.logger.info('FOLDER_TREE', `Loaded ${this.directoryItems.length} directories`);
     } catch (error) {
-      console.error("Failed to load directory structure", error);
+      this.logger.error('FOLDER_TREE', 'Failed to load directory structure', error);
     } finally {
       this.loading = false;
     }
@@ -62,20 +69,25 @@ export class FolderTreeComponent implements OnChanges{
 
   /* ============================================================================================ */
   onToggleExcluded(item: DirectoryItem) {
+    this.logger.debug('FOLDER_TREE', `Toggling exclusion for: ${item.name}`);
     const newExcludedDirs = [...this.excludedDirs];
     const index = newExcludedDirs.indexOf(item.name);
 
     if (index > - 1) {
       newExcludedDirs.splice(index, 1);
+      this.logger.info('FOLDER_TREE', `Included directory: ${item.name}`);
     } else {
       newExcludedDirs.push(item.name);
+      this.logger.info('FOLDER_TREE', `Excluded directory: ${item.name}`);
     }
 
+    item.excluded = !item.excluded;
     this.excludedDirsChange.emit(newExcludedDirs);
   }
 
   /* ============================================================================================ */
   onToggleExpanded(item: DirectoryItem) {
+    this.logger.debug('FOLDER_TREE', `Toggling expansion for: ${item.name}`);
     item.expanded = !item.expanded;
   }
 

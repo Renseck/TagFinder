@@ -13,14 +13,35 @@ import { DirectoryItem } from '../../../services/config/config.service';
     MatButtonModule
   ],
   templateUrl: './folder-tree-item.component.html',
-  styleUrl: './folder-tree-item.component.css',
-  animations: [
-    // slide down animation for children
-  ]
+  styleUrl: './folder-tree-item.component.css'
 })
 export class FolderTreeItemComponent {
   @Input() item!: DirectoryItem;
   @Input() excludedDirs: string[] = [];
   @Output() toggleExcluded = new EventEmitter<DirectoryItem>();
   @Output() toggleExpanded = new EventEmitter<DirectoryItem>();
+
+  /* ============================================================================================ */
+  onToggleExcluded(event: Event) {
+    event.stopPropagation(); // Prevent event bubbling
+    this.toggleExcluded.emit(this.item);
+  }
+
+  /* ============================================================================================ */
+  onToggleExpanded(event: Event) {
+    event.stopPropagation(); // Prevent event bubbling
+    this.toggleExpanded.emit(this.item);
+  }
+
+  /* ============================================================================================ */
+  onChildToggleExcluded(item: DirectoryItem) {
+    this.toggleExcluded.emit(item);
+  }
+
+  /* ============================================================================================ */
+  onChildToggleExpanded(item: DirectoryItem) {
+    this.toggleExpanded.emit(item);
+  }
+  
 }
+

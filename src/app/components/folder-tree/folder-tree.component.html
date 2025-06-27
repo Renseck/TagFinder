@@ -2,7 +2,12 @@
     <h3>Project folders</h3>
     <p class="instructions">Click the eye icon to exclude/include folder from analysis</p>
 
-    <div class="tree-items" *ngIf="directoryItems.length > 0">
+    <div class="loading-indicator" *ngIf="loading">
+        <mat-icon class="spinning">refresh</mat-icon>
+        <span>Loading directory structure...</span>
+    </div>
+
+    <div class="tree-items" *ngIf="directoryItems.length > 0 && !loading">
         <div *ngFor="let item of directoryItems" class="tree-item">
             <app-folder-tree-item
                 [item]="item"
@@ -12,7 +17,8 @@
             </app-folder-tree-item>
         </div>
     </div>
-    <div class="no-directory" *ngIf="directoryItems.length === 0">
+
+    <div class="no-directory" *ngIf="directoryItems.length === 0 && !loading">
         <mat-icon>folder_off</mat-icon>
         <p>Select a project directory to view its folder structure</p>
     </div>
