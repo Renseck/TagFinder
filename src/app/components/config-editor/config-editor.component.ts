@@ -1,14 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { MatButtonModule } from '@angular/material/button';
 import { MatIconModule } from '@angular/material/icon';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
+import { Subject, takeUntil } from 'rxjs';
 import { DirectorySelectorComponent } from '../directory-selector/directory-selector.component';
 import { FolderTreeComponent } from '../folder-tree/folder-tree.component';
 import { FileTypeSelectorComponent } from '../file-type-selector/file-type-selector.component';
 import { CssExtensionSelectorComponent } from '../css-extension-selector/css-extension-selector.component';
 import { ConfigService, ConfigData } from '../../services/config/config.service';
 import { LoggingService } from '../../services/logging/logging.service';
+import { DirectoryService } from '../../services/directory/directory.service';
 
 @Component({
   selector: 'app-config-editor',
@@ -26,7 +28,7 @@ import { LoggingService } from '../../services/logging/logging.service';
   templateUrl: './config-editor.component.html',
   styleUrl: './config-editor.component.css'
 })
-export class ConfigEditorComponent implements OnInit {
+export class ConfigEditorComponent implements OnInit, OnDestroy {
   config: ConfigData = {
     scan: {
       exclude_dirs: [],
@@ -37,18 +39,35 @@ export class ConfigEditorComponent implements OnInit {
 
   projectPath = '';
   saving = false;
+  private destroy$ = new Subject<void>();
 
   /* ============================================================================================ */
   constructor(
     private configService: ConfigService,
     private logger: LoggingService,
+    private directoryService: DirectoryService,
     private snackBar: MatSnackBar
   ) {}
 
   /* ============================================================================================ */
   async ngOnInit() {
       this.logger.info('CONFIG_EDITOR', 'Component initialized');
+
+      this.directoryService.selectedDirectory$
+         .pipe(takeUntil(this.destroy$))
+         .subscribe(directory => {
+            this.projectPath = directory;
+            // this.logger.debug('CONFIG_EDITOR', `Project path updated from shared state: ${directory}`);
+      });
+
+      this.projectPath = this.directoryService.getCurrentDirectory();
+
       await this.loadConfig();
+  }
+
+  ngOnDestroy(): void {
+      this.destroy$.next();
+      this.destroy$.complete();
   }
 
   /* ============================================================================================ */
@@ -65,8 +84,8 @@ export class ConfigEditorComponent implements OnInit {
 
   /* ============================================================================================ */
   onProjectDirectorySelected(directory: string) {
-    this.projectPath = directory;
-    this.logger.info('CONFIG_EDITOR', `Project directory selected: ${directory}`);
+    this.directoryService.setSelectedDirectory(directory);
+    // this.logger.info('CONFIG_EDITOR', `Project directory selected and shared: ${directory}`);
   }
   
   /* ============================================================================================ */

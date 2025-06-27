@@ -16,6 +16,7 @@ import { FooterComponent } from './components/footer/footer.component';
 import { DebugWindowComponent } from './components/debug-window/debug-window.component';
 import { ThemesService } from './services/themes/themes.service';
 import { LoggingService } from './services/logging/logging.service';
+import { DirectoryService } from './services/directory/directory.service';
 import { environment } from '../environments/environment';
 
 @Component({
@@ -69,7 +70,8 @@ export class AppComponent implements OnInit, OnDestroy {
   constructor(
     private themeService: ThemesService,
     private cdr: ChangeDetectorRef,
-    private logger: LoggingService
+    private logger: LoggingService,
+    private directoryService: DirectoryService
   ) {}
 
   /* ======================================== ng funtions ======================================= */
@@ -81,6 +83,18 @@ export class AppComponent implements OnInit, OnDestroy {
       .subscribe(isDark => {
         this.isDarkMode = isDark;
       });
+
+    this.directoryService.selectedDirectory$
+      .pipe(takeUntil(this.destroy$))
+      .subscribe(directory => {
+        this.selectedDirectory = directory;
+        // this.logger.debug('APP', `Directory updated from shared state: ${directory}`);
+
+        if (this.showResults) {
+          this.clearResults();
+          this.logger.debug('APP', 'Cleared previous results due to directory change')
+        }
+      })
 
     if (this.isTauriAvailable()) {
       try {
@@ -110,14 +124,8 @@ export class AppComponent implements OnInit, OnDestroy {
 
   /* ============================================================================================ */
   onDirectorySelected(directory: string): void {
-    this.selectedDirectory = directory;
-    this.logger.info('APP', `Directory selected: ${directory}`);
-
-    // Clear previous results when directory changes
-    if (this.showResults) {
-      this.clearResults();
-      this.logger.debug('APP', 'Cleared previous results due to directory change');
-    }
+    this.directoryService.setSelectedDirectory(directory);
+    // this.logger.info('APP', `Directory selected and shared: ${directory}`);
   }
 
   /* ============================================================================================ */
