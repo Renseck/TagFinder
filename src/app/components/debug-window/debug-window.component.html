@@ -1,101 +1,45 @@
 <div class="debug-panel" *ngIf="getAllDisplayLogs().length > 0 || showAlways">
-    <div class="debug-header">
-    <h4>
-        <mat-icon>bug_report</mat-icon>
-        Debug Panel ({{ getAllDisplayLogs().length }} entries)
-    </h4>
-    <div class="debug-actions">
-        <button mat-button (click)="clearAllLogs()" class="clear-btn">
-        <mat-icon>clear_all</mat-icon>
-        Clear
-        </button>
-        <button mat-button (click)="collapsed = !collapsed" class="toggle-btn">
-        <mat-icon>{{ collapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
-        {{ collapsed ? 'Expand' : 'Collapse' }}
-        </button>
-        <button mat-button (click)="autoScroll = !autoScroll" 
-                [class.active]="autoScroll" class="auto-scroll-btn">
-        <mat-icon>{{ autoScroll ? 'lock' : 'lock_open' }}</mat-icon>
-        Auto-scroll
-        </button>
-    </div>
-    </div>
-    
-    <div class="debug-content" [class.collapsed]="collapsed">
-    <div class="debug-stats" *ngIf="!collapsed">
-        <div class="stat-item">
-        <span class="stat-label">Progress:</span>
-        <span class="stat-value">{{ progressCurrent }}/{{ progressTotal }} ({{ getProgressPercentage() }}%)</span>
-        </div>
-        <div class="stat-item">
-        <span class="stat-label">Message:</span>
-        <span class="stat-value">{{ progressMessage || 'None' }}</span>
-        </div>
-        <div class="stat-item">
-        <span class="stat-label">Loading:</span>
-        <span class="stat-value">{{ loading ? 'Yes' : 'No' }}</span>
-        </div>
-        <div class="stat-item">
-        <span class="stat-label">Action:</span>
-        <span class="stat-value">{{ currentAction || 'None' }}</span>
-        </div>
-    </div>
-    
-    <div class="debug-actions-row" *ngIf="!collapsed">
-        <button mat-button (click)="exportLogs()" *ngIf="getAllDisplayLogs().length > 0">
-        <mat-icon>download</mat-icon>
-        Export Logs
-        </button>
-        <button mat-button (click)="showLogLevel = !showLogLevel" [class.active]="showLogLevel">
-            <mat-icon>{{ showLogLevel ? 'visibility' : 'visibility_off' }}</mat-icon>
-            Show Levels
-        </button>
-    </div>
+  
+  <!-- Header with Actions -->
+  <app-debug-actions
+    [logCount]="getAllDisplayLogs().length"
+    [collapsed]="collapsed"
+    [autoScroll]="autoScroll"
+    [showLogLevel]="showLogLevel"
+    [canExport]="getAllDisplayLogs().length > 0"
+    (clearLogs)="onClearLogs()"
+    (toggleCollapsed)="onToggleCollapsed()"
+    (toggleAutoScroll)="onToggleAutoScroll()"
+    (toggleShowLogLevel)="onToggleShowLogLevel()"
+    (exportLogs)="onExportLogs()">
+  </app-debug-actions>
 
-    <div class="debug-logs" 
-            #logsContainer
-            [class.auto-scroll]="autoScroll"
-            *ngIf="!collapsed">
-
-        <div class="log-entry structured" 
-           *ngFor="let log of getAllDisplayLogs(); let i = index; trackBy: trackByLog"
-           [class.recent]="isRecentLog(i, getAllDisplayLogs().length)"
-           [class.error]="log.level === 'ERROR'"
-           [class.warn]="log.level === 'WARN' || log.level === 'WARNING'"
-           [class.debug]="log.level === 'DEBUG'"
-           [class.progress]="log.level === 'PROGRESS'">
-        
-            <!-- Log Level Badge -->
-            <div class="log-level-badge" 
-                *ngIf="showLogLevel"
-                [style.background-color]="getLogLevelColor(log.level)">
-            <mat-icon>{{ getLogLevelIcon(log.level) }}</mat-icon>
-            </div>
-            
-            <!-- Log Content -->
-            <div class="log-content">
-            <div class="log-header">
-                <span class="log-timestamp">{{ log.timestamp }}</span>
-                <span class="log-component" 
-                    [style.color]="getLogLevelColor(log.level)">
-                [{{ log.component }}]
-                </span>
-                <span class="log-level-text" 
-                    *ngIf="!showLogLevel"
-                    [style.color]="getLogLevelColor(log.level)">
-                {{ log.level }}
-                </span>
-            </div>
-            <div class="log-message">{{ log.message }}</div>
-            <div class="log-data" *ngIf="log.data">
-                <pre>{{ log.data | json }}</pre>
-            </div>
-            </div>
-        </div>
-
-        <div class="no-logs" *ngIf="getAllDisplayLogs().length === 0">
-        No debug logs yet. Start a scan to see progress events.
-        </div>
+  <!-- Stats Section -->
+  <div class="debug-stats" *ngIf="!collapsed">
+    <div class="stat-item">
+      <span class="stat-label">Progress:</span>
+      <span class="stat-value">{{ progressCurrent }}/{{ progressTotal }} ({{ getProgressPercentage() }}%)</span>
     </div>
+    <div class="stat-item">
+      <span class="stat-label">Message:</span>
+      <span class="stat-value">{{ progressMessage || 'None' }}</span>
     </div>
+    <div class="stat-item">
+      <span class="stat-label">Loading:</span>
+      <span class="stat-value">{{ loading ? 'Yes' : 'No' }}</span>
+    </div>
+    <div class="stat-item">
+      <span class="stat-label">Action:</span>
+      <span class="stat-value">{{ currentAction || 'None' }}</span>
+    </div>
+  </div>
+
+  <!-- Log List -->
+  <app-log-list
+    [logs]="getAllDisplayLogs()"
+    [showLogLevel]="showLogLevel"
+    [autoScroll]="autoScroll"
+    [collapsed]="collapsed">
+  </app-log-list>
+
 </div>

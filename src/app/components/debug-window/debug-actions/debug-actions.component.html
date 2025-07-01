@@ -1,0 +1,35 @@
+<div class="debug-header">
+  <h4>
+    <mat-icon>bug_report</mat-icon>
+    Debug Panel ({{ logCount }} entries)
+  </h4>
+  <div class="debug-actions">
+    <button mat-button (click)="onClearLogs()" class="clear-btn">
+      <mat-icon>clear_all</mat-icon>
+      Clear
+    </button>
+    <button mat-button (click)="onToggleCollapsed()" class="toggle-btn">
+      <mat-icon>{{ collapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
+      {{ collapsed ? 'Expand' : 'Collapse' }}
+    </button>
+    <button mat-button (click)="onToggleAutoScroll()" 
+            [class.active]="autoScroll" class="auto-scroll-btn">
+      <mat-icon>{{ autoScroll ? 'lock' : 'lock_open' }}</mat-icon>
+      Auto-scroll
+    </button>
+  </div>
+</div>
+
+<!-- Stats and Export Row -->
+<div class="debug-content-actions" *ngIf="!collapsed">
+  <div class="debug-actions-row">
+    <button mat-button (click)="onExportLogs()" *ngIf="canExport">
+      <mat-icon>download</mat-icon>
+      Export Logs
+    </button>
+    <button mat-button (click)="onToggleShowLogLevel()" [class.active]="showLogLevel">
+      <mat-icon>{{ showLogLevel ? 'visibility' : 'visibility_off' }}</mat-icon>
+      Show levels
+    </button>
+  </div>
+</div>

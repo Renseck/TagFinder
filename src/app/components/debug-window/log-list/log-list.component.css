@@ -1,0 +1,39 @@
+.debug-logs {
+  max-height: 250px;
+  overflow-y: auto;
+  background: var(--code-background);
+  padding: 0.5rem;
+}
+
+.debug-logs.auto-scroll {
+  scroll-behavior: smooth;
+}
+
+.no-logs {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 2rem;
+  font-style: italic;
+}
+
+/* Hover effect for recent messages */
+:host ::ng-deep app-log-entry:nth-last-child(-n+3) .log-entry.structured:not(.no-logs):hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(40, 167, 69, 0.3);
+}
+
+/* Animation for new entries */
+:host ::ng-deep app-log-entry:last-child .log-entry.structured {
+  animation: slideInFromBottom 0.3s ease-out;
+}
+
+@keyframes slideInFromBottom {
+  0% {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  100% {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}

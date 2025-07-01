@@ -1,9 +1,11 @@
-import { Component, Input, Output, EventEmitter, OnInit, OnDestroy, AfterViewChecked } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatButtonModule } from '@angular/material/button';
-import { MatIconModule } from '@angular/material/icon';
 import { LogEntry, LoggingService } from '../../services/logging/logging.service';
 import { Subject, takeUntil } from 'rxjs';
+
+import { DebugActionsComponent } from './debug-actions/debug-actions.component';
+import { LogListComponent } from './log-list/log-list.component';
+import { LogEntryData } from './log-entry/log-entry.component';
 
 interface DisplayLogEntry {
   timestamp: string;
@@ -20,13 +22,13 @@ interface DisplayLogEntry {
   standalone: true,
   imports: [
     CommonModule,
-    MatButtonModule,
-    MatIconModule
+    DebugActionsComponent,
+    LogListComponent
   ],
   templateUrl: './debug-window.component.html',
   styleUrl: './debug-window.component.css'
 })
-export class DebugWindowComponent implements OnInit, OnDestroy,AfterViewChecked {
+export class DebugWindowComponent implements OnInit, OnDestroy {
   // Backwards compatibility
   @Input() logs: string[] = [];
   @Input() progressCurrent: number = 0;
@@ -38,11 +40,10 @@ export class DebugWindowComponent implements OnInit, OnDestroy,AfterViewChecked 
 
   @Output() clearLogs = new EventEmitter<void>();
 
+  // Component state
   collapsed = false;
   autoScroll = true;
   showLogLevel = true;
-
-  // New logs
   structuredLogs: LogEntry[] = [];
   private destroy$ = new Subject<void>();
 
@@ -62,13 +63,6 @@ export class DebugWindowComponent implements OnInit, OnDestroy,AfterViewChecked 
       this.destroy$.next();
       this.destroy$.complete();
   }
-
-  ngAfterViewChecked(): void {
-    if (this.autoScroll) {
-      this.scrollToBottom();
-    }
-  }
-
   
   /* ============================================================================================ */
   getAllDisplayLogs(): DisplayLogEntry[] {
@@ -113,53 +107,9 @@ export class DebugWindowComponent implements OnInit, OnDestroy,AfterViewChecked 
 
   }
 
+  /* ============================================================================================ */
   getStructuredLogs(): LogEntry[] {
     return this.logger.getAllLogs();
-  }
-
-  getLogLevelColor(level: string): string {
-    switch (level) {
-      case 'ERROR': return '#e74c3c';
-      case 'WARN': return '#f39c12';
-      case 'INFO': return '#3498db';
-      case 'DEBUG': return '#95a5a6';
-      default: return '#333';
-    }
-  }
-
-  getLogLevelIcon(level: string): string {
-    switch (level.toUpperCase()) {
-      case 'ERROR': return 'error';
-      case 'WARN':
-      case 'WARNING': return 'warning';
-      case 'INFO': return 'info';
-      case 'DEBUG': return 'bug_report';
-      case 'PROGRESS': return 'trending_up';
-      default: return 'circle';
-    }
-  }
-
-  /* ============================================================================================ */
-  private formatStructuredLog(log: LogEntry): string {
-    const time = new Date(log.timestamp).toLocaleTimeString();
-    const dataStr = log.data ? ` | Data: ${JSON.stringify(log.data)}` : '';
-    return `${time} [${log.level}] [${log.component}] ${log.message}${dataStr}`;
-  }
-
-
-  /* ============================================================================================ */
-  trackByIndex(index: number, item: string): number {
-    return index;
-  }
-
-  /* ============================================================================================ */
-  trackByLog(index: number, item: DisplayLogEntry): string {
-    return `${item.timestamp}-${item.component}-${item.message}`;
-  }
-
-  /* ============================================================================================ */
-  isRecentLog(index: number, totalLogs: number): boolean {
-    return index >= totalLogs - 3; // Tune as needed
   }
 
   /* ============================================================================================ */
@@ -169,7 +119,28 @@ export class DebugWindowComponent implements OnInit, OnDestroy,AfterViewChecked 
   }
 
   /* ============================================================================================ */
-  exportLogs(): void {
+  onClearLogs(): void {
+    this.logger.clearLogs();
+    this.clearLogs.emit();
+  }
+
+  /* ============================================================================================ */
+  onToggleCollapsed(): void {
+    this.collapsed = !this.collapsed;
+  }
+
+  /* ============================================================================================ */
+  onToggleAutoScroll(): void {
+    this.autoScroll = !this.autoScroll;
+  }
+
+  /* ============================================================================================ */
+  onToggleShowLogLevel(): void {
+    this.showLogLevel = !this.showLogLevel;
+  }
+
+  /* ============================================================================================ */
+  onExportLogs(): void {
     const allLogs = this.getAllDisplayLogs();
     const logText = allLogs.map(log => {
       const dataStr = log.data ? ` | Data: ${JSON.stringify(log.data)}` : '';
@@ -186,9 +157,10 @@ export class DebugWindowComponent implements OnInit, OnDestroy,AfterViewChecked 
   }
 
   /* ============================================================================================ */
-  clearAllLogs(): void {
-    this.logger.clearLogs();
-    this.clearLogs.emit();
+  private formatStructuredLog(log: LogEntry): string {
+    const time = new Date(log.timestamp).toLocaleTimeString();
+    const dataStr = log.data ? ` | Data: ${JSON.stringify(log.data)}` : '';
+    return `${time} [${log.level}] [${log.component}] ${log.message}${dataStr}`;
   }
 
   /* ============================================================================================ */
@@ -233,13 +205,5 @@ export class DebugWindowComponent implements OnInit, OnDestroy,AfterViewChecked 
     const now = new Date();
     const time = new Date(now.getFullYear(), now.getMonth(), now.getDate(), hours, minutes, seconds);
     return time.getTime();
-  }
-
-  /* ============================================================================================ */
-  private scrollToBottom(): void {
-    const logsContainer = document.querySelector(".debug-logs");
-    if (logsContainer) {
-      logsContainer.scrollTop = logsContainer.scrollHeight;
-    }
   }
 }

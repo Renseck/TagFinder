@@ -1,0 +1,34 @@
+<div class="log-entry structured" 
+     [class.recent]="isRecent"
+     [class.error]="logEntry.level === 'ERROR'"
+     [class.warn]="logEntry.level === 'WARN' || logEntry.level === 'WARNING'"
+     [class.debug]="logEntry.level === 'DEBUG'"
+     [class.progress]="logEntry.level === 'PROGRESS'">
+
+  <!-- Log Level Badge -->
+  <div class="log-level-badge" 
+       *ngIf="showLogLevel"
+       [style.background-color]="getLogLevelColor(logEntry.level)">
+    <mat-icon>{{ getLogLevelIcon(logEntry.level) }}</mat-icon>
+  </div>
+  
+  <!-- Log Content -->
+  <div class="log-content">
+    <div class="log-header">
+      <span class="log-timestamp">{{ logEntry.timestamp }}</span>
+      <span class="log-component" 
+            [style.color]="getLogLevelColor(logEntry.level)">
+        [{{ logEntry.component }}]
+      </span>
+      <span class="log-level-text" 
+            *ngIf="!showLogLevel"
+            [style.color]="getLogLevelColor(logEntry.level)">
+        {{ logEntry.level }}
+      </span>
+    </div>
+    <div class="log-message">{{ logEntry.message }}</div>
+    <div class="log-data" *ngIf="hasData()">
+      <pre>{{ logEntry.data | json }}</pre>
+    </div>
+  </div>
+</div>

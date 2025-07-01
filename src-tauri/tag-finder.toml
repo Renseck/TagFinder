@@ -1,4 +1,4 @@
 [scan]
-exclude_dirs = ["node_modules", "dist", ".vscode", ".idea", ".angular", "build", "target", "backend", "docs", ".git"]
+exclude_dirs = ["node_modules", "dist", ".vscode", ".idea", ".angular", "build", "target", "backend", "docs", ".git", "src-tauri", "images"]
 include_extensions = ["html", "js", "jsx", "ts", "tsx", "php"]
 css_extensions = ["css", "scss"]

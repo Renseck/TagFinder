@@ -1,0 +1,16 @@
+<div class="debug-logs" 
+     [class.auto-scroll]="autoScroll"
+     *ngIf="!collapsed">
+
+  <app-log-entry
+    *ngFor="let log of logs; let i = index; trackBy: trackByLog"
+    [logEntry]="log"
+    [showLogLevel]="showLogLevel"
+    [isRecent]="isRecentLog(i)"
+    [class.recent-entry]="isRecentLog(i)">
+  </app-log-entry>
+
+  <div class="no-logs" *ngIf="logs.length === 0">
+    No debug logs yet. Start a scan to see progress events.
+  </div>
+</div>
