@@ -2,17 +2,63 @@
   
   <!-- Header with Actions -->
   <app-debug-actions
-    [logCount]="getAllDisplayLogs().length"
+    [logCount]="getFilteredDisplayLogs().length"
+    [totalLogCount]="getAllDisplayLogs().length"
     [collapsed]="collapsed"
     [autoScroll]="autoScroll"
     [showLogLevel]="showLogLevel"
-    [canExport]="getAllDisplayLogs().length > 0"
+    [canExport]="getFilteredDisplayLogs().length > 0"
+    [showFilterPanel]="showFilterPanel"
+    [activeFilterCount]="getActiveFilterCount()"
+    [totalFilterCount]="getTotalFilterCount()"
     (clearLogs)="onClearLogs()"
     (toggleCollapsed)="onToggleCollapsed()"
     (toggleAutoScroll)="onToggleAutoScroll()"
     (toggleShowLogLevel)="onToggleShowLogLevel()"
+    (toggleFilter)="onToggleFilter()"
     (exportLogs)="onExportLogs()">
   </app-debug-actions>
+
+  <!-- Filter panel -->
+  <div class="filter-panel" *ngIf="showFilterPanel && !collapsed">
+    <div class="filter-header">
+      <h5>
+        <mat-icon>tune</mat-icon>
+        Log Level Filters
+      </h5>
+      <div class="filter-quick-actions">
+        <button mat-button (click)="toggleAllFilters(true)" class="quick-action-btn">
+          <mat-icon>select_all</mat-icon>
+          All
+        </button>
+        <button mat-button (click)="toggleAllFilters(false)" class="quick-action-btn">
+          <mat-icon>deselect</mat-icon>
+          None
+        </button>
+        <button mat-button (click)="resetFilters()" class="quick-action-btn">
+          <mat-icon>refresh</mat-icon>
+          Reset
+        </button>
+      </div>
+    </div>
+    
+    <div class="filter-options">
+      <div class="filter-option" 
+           *ngFor="let level of ['ERROR', 'WARN', 'INFO', 'DEBUG', 'PROGRESS']"
+           (click)="toggleLevelFilter(level)">
+        <div class="filter-checkbox">
+          <mat-icon [class.checked]="isLevelFilterActive(level)">
+            {{ isLevelFilterActive(level) ? 'check_box' : 'check_box_outline_blank' }}
+          </mat-icon>
+        </div>
+        <div class="filter-label">
+          <mat-icon class="level-icon">{{ getLogLevelIcon(level) }}</mat-icon>
+          <span class="level-name">{{ level }}</span>
+          <span class="level-count">({{ getLogCountByLevel()[level] || 0 }})</span>
+        </div>
+      </div>
+    </div>
+  </div>
 
   <!-- Stats Section -->
   <div class="debug-stats" *ngIf="!collapsed">
@@ -36,7 +82,7 @@
 
   <!-- Log List -->
   <app-log-list
-    [logs]="getAllDisplayLogs()"
+    [logs]="getFilteredDisplayLogs()"
     [showLogLevel]="showLogLevel"
     [autoScroll]="autoScroll"
     [collapsed]="collapsed">

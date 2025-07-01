@@ -2,10 +2,11 @@ import { Component, Input, Output, EventEmitter, OnInit, OnDestroy } from '@angu
 import { CommonModule } from '@angular/common';
 import { LogEntry, LoggingService } from '../../services/logging/logging.service';
 import { Subject, takeUntil } from 'rxjs';
+import { MatIconModule } from '@angular/material/icon';
 
 import { DebugActionsComponent } from './debug-actions/debug-actions.component';
 import { LogListComponent } from './log-list/log-list.component';
-import { LogEntryData } from './log-entry/log-entry.component';
+import { getLogLevelIcon, getLogLevelColor } from './log-entry/log-entry.utils';
 
 interface DisplayLogEntry {
   timestamp: string;
@@ -22,6 +23,7 @@ interface DisplayLogEntry {
   standalone: true,
   imports: [
     CommonModule,
+    MatIconModule,
     DebugActionsComponent,
     LogListComponent
   ],
@@ -47,8 +49,22 @@ export class DebugWindowComponent implements OnInit, OnDestroy {
   structuredLogs: LogEntry[] = [];
   private destroy$ = new Subject<void>();
 
+  // Log filtering
+  levelFilters = {
+    ERROR: true,
+    WARN: true,
+    WARNING: true,
+    INFO: true,
+    DEBUG: true,
+    PROGRESS: true
+  };
+  showFilterPanel = false;
+
   /* ============================================================================================ */
   constructor(private logger: LoggingService) {}
+
+  getLogLevelIcon = getLogLevelIcon;
+  getLogLevelColor = getLogLevelColor;
 
   /* ============================================================================================ */
   ngOnInit(): void {
@@ -108,6 +124,15 @@ export class DebugWindowComponent implements OnInit, OnDestroy {
   }
 
   /* ============================================================================================ */
+  getFilteredDisplayLogs(): DisplayLogEntry[] {
+    const allLogs = this.getAllDisplayLogs();
+    return allLogs.filter(log => {
+      const level = log.level.toUpperCase();
+      return this.levelFilters[level as keyof typeof this.levelFilters] ?? true;
+    })
+  }
+
+  /* ============================================================================================ */
   getStructuredLogs(): LogEntry[] {
     return this.logger.getAllLogs();
   }
@@ -116,6 +141,69 @@ export class DebugWindowComponent implements OnInit, OnDestroy {
   getProgressPercentage(): number {
     if (this.progressTotal === 0) return 0;
     return Math.round((this.progressCurrent / this.progressTotal) * 100);
+  }
+  
+  /* ============================================================================================ */
+  toggleLevelFilter(level: string): void {
+    const upperLevel = level.toUpperCase() as keyof typeof this.levelFilters;
+    this.levelFilters[upperLevel] = !this.levelFilters[upperLevel];
+    // Log?
+  }
+
+  /* ============================================================================================ */
+  toggleAllFilters(selectAll: boolean): void {
+    Object.keys(this.levelFilters).forEach(level => {
+      this.levelFilters[level as keyof typeof this.levelFilters] = selectAll;
+    });
+  }
+
+  /* ============================================================================================ */
+  isLevelFilterActive(level: string): boolean {
+    const upperLevel = level.toUpperCase() as keyof typeof this.levelFilters;
+    return this.levelFilters[upperLevel] ?? true;
+  }
+
+  /* ============================================================================================ */
+  getActiveFilterCount(): number {
+    return Object.values(this.levelFilters).filter(active => active).length;
+  }
+
+  /* ============================================================================================ */
+  getTotalFilterCount(): number {
+    return Object.keys(this.levelFilters).length;
+  }
+
+  /* ============================================================================================ */
+  getLogCountByLevel(): Record<string, number> {
+    const allLogs = this.getAllDisplayLogs();
+    const counts: Record<string, number> = {
+      ERROR: 0,
+      WARN: 0,
+      WARNING: 0,
+      INFO: 0,
+      DEBUG: 0,
+      PROGRESS: 0
+    };
+
+    allLogs.forEach(log => {
+      const level = log.level.toUpperCase();
+      if (level in counts) {
+        counts[level]++;
+      }
+    });
+
+    counts["WARN"] += counts["WARNING"];
+    delete counts["WARNING"];
+
+    return counts;
+  }
+
+  /* ============================================================================================ */
+  resetFilters(): void {
+    Object.keys(this.levelFilters).forEach(level => {
+      this.levelFilters[level as keyof typeof this.levelFilters] = true;
+    });
+    // Log?
   }
 
   /* ============================================================================================ */
@@ -140,8 +228,13 @@ export class DebugWindowComponent implements OnInit, OnDestroy {
   }
 
   /* ============================================================================================ */
+  onToggleFilter(): void {
+    this.showFilterPanel = !this.showFilterPanel;
+  }
+
+  /* ============================================================================================ */
   onExportLogs(): void {
-    const allLogs = this.getAllDisplayLogs();
+    const allLogs = this.getFilteredDisplayLogs();
     const logText = allLogs.map(log => {
       const dataStr = log.data ? ` | Data: ${JSON.stringify(log.data)}` : '';
       return `${log.timestamp} [${log.level}] [${log.component}] ${log.message}${dataStr}`;

@@ -1,17 +1,26 @@
 <div class="debug-header">
-  <h4>
+   <h4>
     <mat-icon>bug_report</mat-icon>
-    Debug Panel ({{ logCount }} entries)
+    Debug Panel 
+    <span *ngIf="logCount !== totalLogCount">({{ logCount }}/{{ totalLogCount }} entries)</span>
+    <span *ngIf="logCount === totalLogCount">({{ logCount }} entries)</span>
   </h4>
   <div class="debug-actions">
     <button mat-button (click)="onClearLogs()" class="clear-btn">
       <mat-icon>clear_all</mat-icon>
       Clear
     </button>
+
+    <button mat-button (click)="onToggleFilter()" [class.active]="showFilterPanel" class="filter-btn">
+      <mat-icon>filter_list</mat-icon>
+      Filter ({{ activeFilterCount }}/{{ totalFilterCount }})
+    </button>
+
     <button mat-button (click)="onToggleCollapsed()" class="toggle-btn">
       <mat-icon>{{ collapsed ? 'expand_more' : 'expand_less' }}</mat-icon>
       {{ collapsed ? 'Expand' : 'Collapse' }}
     </button>
+
     <button mat-button (click)="onToggleAutoScroll()" 
             [class.active]="autoScroll" class="auto-scroll-btn">
       <mat-icon>{{ autoScroll ? 'lock' : 'lock_open' }}</mat-icon>

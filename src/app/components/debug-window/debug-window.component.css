@@ -32,3 +32,115 @@
     color: var(--text-color);
     font-weight: 500;
 }
+
+.filter-panel {
+  background: var(--surface-color, #f8f9fa);
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 8px;
+  margin: 0.5rem 1rem;
+  padding: 1rem;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.filter-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid var(--border-color, #dee2e6);
+}
+
+.filter-header h5 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-color, #333);
+  font-size: 0.9rem;
+}
+
+.filter-quick-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.quick-action-btn {
+  padding: 0.25rem 0.5rem !important;
+  min-width: auto !important;
+  font-size: 0.75rem !important;
+  height: 32px !important;
+  line-height: 1 !important;
+}
+
+.filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.filter-option {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color, #dee2e6);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  background: var(--bg-color, #ffffff);
+  min-width: 120px;
+}
+
+.filter-option:hover {
+  background: rgba(33, 150, 243, 0.05);
+  border-color: #2196f3;
+  transform: translateY(-1px);
+}
+
+.filter-checkbox mat-icon {
+  font-size: 1.2rem !important;
+  width: 1.2rem !important;
+  height: 1.2rem !important;
+  color: #2196f3;
+  transition: all 0.2s ease;
+}
+
+.filter-checkbox mat-icon:not(.checked) {
+  color: #6c757d;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.level-icon {
+  font-size: 1rem !important;
+  width: 1rem !important;
+  height: 1rem !important;
+}
+
+.level-name {
+  min-width: 60px;
+}
+
+.level-count {
+  font-size: 0.7rem;
+  opacity: 0.7;
+  font-weight: 400;
+}
