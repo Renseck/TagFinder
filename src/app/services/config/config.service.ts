@@ -41,7 +41,7 @@ export class ConfigService {
       return {
         scan: {
           exclude_dirs: ["node_modules", "dist", ".git", ".vscode", ".idea", ".angular", "build", "target", "backend"],
-          include_extensions: ["html", "js", "jsx", "ts", "tsx", "php"],
+          include_extensions: ["html", "js", "jsx", "ts", "tsx", "php", "rs"],
           css_extensions: ["css", "scss"]
         }
       };
@@ -73,7 +73,7 @@ export class ConfigService {
 
   /* ============================================================================================ */
   getCommonFileTypes(): string[] {
-    return ['html', 'htm', 'js', 'jsx', 'ts', 'tsx', 'vue', 'svelte', 'php'];
+    return ['html', 'htm', 'js', 'jsx', 'ts', 'tsx', 'vue', 'svelte', 'php', 'rs'];
   }
 
   /* ============================================================================================ */

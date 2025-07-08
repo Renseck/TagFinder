@@ -30,6 +30,11 @@
   padding: 0.75rem;
   transition: all 0.3s ease;
   cursor: pointer;
+  user-select: none;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .file-type-checkbox:hover {
@@ -39,9 +44,23 @@
   box-shadow: 0 2px 8px rgba(52, 152, 219, 0.2);
 }
 
-.file-type-checkbox.mat-mdc-checkbox-checked {
+.file-type-checkbox.checked {
   background: rgba(52, 152, 219, 0.1);
   border-color: #3498db;
+}
+
+.file-type-checkbox mat-checkbox {
+  width: 100%;
+  pointer-events: none; /* Disable pointer events on the checkbox itself */
+}
+
+.file-type-checkbox mat-checkbox .mdc-checkbox {
+  pointer-events: none; /* Ensure the inner checkbox is not clickable */
+}
+
+.file-type-checkbox.checked mat-checkbox ::ng-deep .mdc-checkbox__native-control:checked ~ .mdc-checkbox__background {
+  background-color: #27ae60;
+  border-color: #27ae60;
 }
 
 .file-extension {
