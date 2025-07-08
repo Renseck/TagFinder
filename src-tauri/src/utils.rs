@@ -2,6 +2,85 @@ use std::fs;
 use std::path::Path;
 
 /* ============================================================================================== */
+/*                                          Process utils                                         */
+/* ============================================================================================== */
+pub fn create_thread_pool(thread_count: Option<usize>) -> Result<rayon::ThreadPool, Box<dyn std::error::Error>> {
+    let pool = match thread_count {
+        Some(count) => rayon::ThreadPoolBuilder::new().num_threads(count).build()?,
+        None => rayon::ThreadPoolBuilder::new().build()?,
+    };
+    Ok(pool)
+}
+
+/* ============================================================================================== */
+pub fn separate_items_by_condition<T, F>(items: Vec<T>, condition: F) -> (Vec<T>, Vec<T>) 
+where
+    F: Fn(&T) -> bool,
+{
+    let mut true_items = Vec::new();
+    let mut false_items = Vec::new();
+    
+    for item in items {
+        if condition(&item) {
+            true_items.push(item);
+        } else {
+            false_items.push(item);
+        }
+    }
+    
+    (true_items, false_items)
+}
+
+/* ============================================================================================== */
+pub fn calculate_progress_step_size(total: usize, target_updates: usize) -> usize {
+    std::cmp::max(1, total / target_updates)
+}
+
+/* ============================================================================================== */
+pub fn get_thread_count_or_default(thread_count: Option<usize>) -> usize {
+    thread_count.unwrap_or_else(num_cpus::get)
+}
+/* ============================================================================================== */
+/*                                        Collection utils                                        */
+/* ============================================================================================== */
+pub fn extract_first_element<T, U>(items: Vec<(T, U)>) -> Vec<T> {
+    items.into_iter().map(|(first, _)| first).collect()
+}
+
+/* ============================================================================================== */
+pub fn extract_second_element<T, U>(items: Vec<(T, U)>) -> Vec<U> {
+    items.into_iter().map(|(_, second)| second).collect()
+}
+
+/* ============================================================================================== */
+pub fn filter_and_extract<T, U, F>(items: Vec<(T, U)>, predicate: F) -> Vec<T>
+where
+    F: Fn(&(T, U)) -> bool,
+{
+    items.into_iter()
+        .filter(|item| predicate(item))
+        .map(|(first, _)| first)
+        .collect()
+}
+/* ============================================================================================== */
+/*                                         File utils                                         */
+/* ============================================================================================== */
+pub fn has_extension(path: &std::path::Path, extensions: &[&str]) -> bool {
+    if let Some(ext) = get_file_extension(path) {
+        extensions.iter().any(|allowed| *allowed == ext)
+    } else {
+        false
+    }
+}
+
+/* ============================================================================================== */
+pub fn get_file_extension(path: &std::path::Path) -> Option<&str> {
+    path.extension().and_then(|ext| ext.to_str())
+}
+
+/* ============================================================================================== */
+/*                                         Printing utils                                         */
+/* ============================================================================================== */
 pub fn print_header_line(width: usize) {
     println!("{spacer:=>width$}", spacer="=", width = width);
 }
@@ -67,4 +146,20 @@ fn get_max_line_length(content: &str) -> usize {
         })
         .max()
         .unwrap_or(60) // Default to 60 if somehow empty
+}
+
+/* ============================================================================================== */
+/*                                      Error handling utils                                      */
+/* ============================================================================================== */
+pub fn convert_sync_error<E: std::error::Error + Send + Sync + 'static>(
+    error: E
+) -> Box<dyn std::error::Error> {
+    Box::new(std::io::Error::new(std::io::ErrorKind::Other, error.to_string()))
+}
+
+/* ============================================================================================== */
+pub fn convert_thread_error<E: std::error::Error + Send + Sync + 'static>(
+    error: E
+) -> Box<dyn std::error::Error + Send + Sync> {
+    Box::new(std::io::Error::new(std::io::ErrorKind::Other, error.to_string()))
 }
