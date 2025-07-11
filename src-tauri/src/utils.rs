@@ -40,6 +40,7 @@ pub fn calculate_progress_step_size(total: usize, target_updates: usize) -> usiz
 pub fn get_thread_count_or_default(thread_count: Option<usize>) -> usize {
     thread_count.unwrap_or_else(num_cpus::get)
 }
+
 /* ============================================================================================== */
 /*                                        Collection utils                                        */
 /* ============================================================================================== */
@@ -62,8 +63,9 @@ where
         .map(|(first, _)| first)
         .collect()
 }
+
 /* ============================================================================================== */
-/*                                         File utils                                         */
+/*                                         File utils                                             */
 /* ============================================================================================== */
 pub fn has_extension(path: &std::path::Path, extensions: &[&str]) -> bool {
     if let Some(ext) = get_file_extension(path) {

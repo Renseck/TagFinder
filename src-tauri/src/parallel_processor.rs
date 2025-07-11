@@ -143,7 +143,7 @@ impl ParallelProcessor {
             })
         };
 
-        progress.finish("Processing complete!");
+        // progress.finish("Processing complete!");
         Ok(results)
     }
 }
