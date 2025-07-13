@@ -1,6 +1,7 @@
 use rayon::prelude::*;
 use  crate::utils::{create_thread_pool, calculate_progress_step_size};
 use crate::progress_reporter::ProgressReporter;
+use crate::traits::{ThreadCountConfigurable, ProgressConfigurable};
 
 pub struct ParallelProcessor {
     thread_count: Option<usize>,
@@ -9,18 +10,12 @@ pub struct ParallelProcessor {
 }
 
 impl ParallelProcessor {
-    pub fn new(thread_count: Option<usize>) -> Self {
+    pub fn new() -> Self {
         Self { 
-            thread_count,
+            thread_count: None,
             show_progress: true,
             progress_emitter: None,
         }
-    }
-
-    /* ========================================================================================== */
-    pub fn with_progress(mut self, show_progress: bool) -> Self {
-        self.show_progress = show_progress;
-        self
     }
 
     /* ========================================================================================== */
@@ -145,5 +140,19 @@ impl ParallelProcessor {
 
         // progress.finish("Processing complete!");
         Ok(results)
+    }
+}
+
+impl ThreadCountConfigurable for ParallelProcessor {
+    fn with_thread_count(mut self, count: usize) -> Self {
+        self.thread_count = Some(count);
+        self
+    }
+}
+
+impl ProgressConfigurable for ParallelProcessor {
+    fn with_progress(mut self, show_progress: bool) -> Self {
+        self.show_progress = show_progress;
+        self
     }
 }

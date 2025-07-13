@@ -5,6 +5,8 @@ use crate::file_walker::FileWalker;
 use crate::text_processor::{TextProcessor, DynamicPattern};
 use crate::parallel_processor::ParallelProcessor;
 use crate::config::Config;
+use crate::ProcessorBuilder;
+use crate::traits::{ConfigConfigurable, ThreadCountConfigurable};
 use std::collections::HashMap;
 use std::path::PathBuf;
 use serde::{Deserialize, Serialize};
@@ -42,18 +44,6 @@ impl UnusedDetector {
     }
 
     /* ========================================================================================== */
-    pub fn with_thread_count(mut self, count: usize) -> Self {
-        self.thread_count = Some(count);
-        self
-    }
-
-    /* ========================================================================================== */
-    pub fn with_config(mut self, config: Config) -> Self {
-        self.config = Some(config);
-        self
-    }
-
-    /* ========================================================================================== */
     pub fn with_progress_emitter(mut self, app: tauri::AppHandle) -> Self {
         self.progress_emitter = Some(app);
         self
@@ -62,8 +52,7 @@ impl UnusedDetector {
     /* ========================================================================================== */
     pub fn generate_report(&self) -> Result<UnusedReport, Box<dyn std::error::Error>> {
         // Single walker for all operations
-        let mut walker = FileWalker::new(self.directory.clone())
-            .with_thread_count(self.thread_count.unwrap_or(num_cpus::get()));
+        let mut walker = FileWalker::new(self.directory.clone()).configure_threads(self.thread_count);
 
         if let Some(config) = &self.config {
             walker = walker.with_config(config.clone());
@@ -152,37 +141,41 @@ impl UnusedDetector {
         all_files_with_content: Vec<(PathBuf, String)>,
         dynamic_patterns: &[DynamicPattern],
     ) -> Result<(Vec<CssClass>, Vec<CssClass>, HashMap<String, Vec<UnusedClass>>), Box<dyn std::error::Error>> {
-
-        let files_arc = Arc::new(all_files_with_content);
-        let patterns_arc = Arc::new(dynamic_patterns.to_vec());
-        
         // Step 1: Check exact matches
-        let (used_classes, potentially_unused_classes) = self.check_exact_matches(classes, &files_arc)?;
+        let (used_classes, potentially_unused_classes) = self.check_exact_matches(classes, &all_files_with_content)?;
         
         // Step 2: Check dynamic patterns for remaining classes
-        let (final_used_classes, unused_classes) = self.check_dynamic_patterns(
-            used_classes, 
-            potentially_unused_classes, 
-            &files_arc, 
-            &patterns_arc
-        )?;
-        
-        // Step 3: Build by_file structure
-        let by_file = self.build_by_file_structure(&final_used_classes, &unused_classes);
+        if !potentially_unused_classes.is_empty() && !dynamic_patterns.is_empty() {
+            let files_arc = Arc::new(all_files_with_content);
+            let patterns_arc = Arc::new(dynamic_patterns.to_vec());
 
-        println!("✅ Analysis complete!");
-        Ok((unused_classes, final_used_classes, by_file))
+            let (final_used_classes, unused_classes) = self.check_dynamic_patterns(
+                used_classes, 
+                potentially_unused_classes, 
+                &files_arc, 
+                &patterns_arc
+            )?;
+
+            let by_file = self.build_by_file_structure(&final_used_classes, &unused_classes);
+            println!("✅ Analysis complete!");
+            Ok((unused_classes, final_used_classes, by_file))
+        } else {
+            let by_file = self.build_by_file_structure(&used_classes, &potentially_unused_classes);
+            println!("✅ Analysis complete!");
+            Ok((potentially_unused_classes, used_classes, by_file))
+        }
+        
     }
 
     /* ========================================================================================== */
     fn check_exact_matches(
         &self,
         classes: &[CssClass],
-        files_arc: &Arc<Vec<(PathBuf, String)>>,
+        files_with_content: &[(PathBuf, String)],
     ) -> Result<(Vec<CssClass>, Vec<CssClass>), Box<dyn std::error::Error>> {
         println!("🔍 Analyzing {} classes using {} threads...", classes.len(), get_thread_count_or_default(self.thread_count));
 
-        let mut processor = ParallelProcessor::new(self.thread_count);
+        let mut processor = ParallelProcessor::new().configure_threads(self.thread_count);
         
         if let Some(ref app) = self.progress_emitter {
             processor = processor.with_progress_emitter(app.clone());
@@ -190,10 +183,11 @@ impl UnusedDetector {
 
         println!("   Step 1: Checking exact matches...");
 
+        let files_arc = Arc::new(files_with_content.to_vec());
         let exact_results = processor.process(
             classes.to_vec(), 
             |class| -> Result<(CssClass, bool), Box<dyn std::error::Error + Send + Sync>> {
-                let is_unused = self.is_class_unused_exact(class, files_arc)?;
+                let is_unused = self.is_class_unused_exact(class, &files_arc)?;
                 Ok((class.clone(), is_unused))
             },
             "Analyzing exact matches for"
@@ -227,7 +221,7 @@ impl UnusedDetector {
 
         println!("   Step 2: Checking dynamic patterns for remaining {} classes...", potentially_unused_classes.len());
         
-        let mut processor = ParallelProcessor::new(self.thread_count);
+        let mut processor = ParallelProcessor::new().configure_threads(self.thread_count);
         
         // Pass progress emitter to sub-processor
         if let Some(ref app) = self.progress_emitter {
@@ -310,6 +304,22 @@ impl UnusedDetector {
     }
 }
 
+/* ============================================================================================== */
+impl ThreadCountConfigurable for UnusedDetector {
+    fn with_thread_count(mut self, count: usize) -> Self {
+        self.thread_count = Some(count);
+        self
+    }
+}
+
+impl ConfigConfigurable for UnusedDetector {
+    fn with_config(mut self, config: Config) -> Self {
+        self.config = Some(config);
+        self
+    }
+}
+
+/* ============================================================================================== */
 impl UnusedReport {
     pub fn print_summary(&self) {
         println!("\n📋 UNUSED CSS CLASSES REPORT");

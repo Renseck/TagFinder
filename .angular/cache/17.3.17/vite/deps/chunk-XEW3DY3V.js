@@ -154,4 +154,4 @@ export {
   Resource,
   isTauri
 };
-//# sourceMappingURL=chunk-URWMUQW3.js.map
+//# sourceMappingURL=chunk-XEW3DY3V.js.map

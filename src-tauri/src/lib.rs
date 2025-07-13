@@ -7,6 +7,7 @@ pub mod text_processor;
 pub mod unused_detector;
 pub mod utils;
 pub mod config;
+pub mod traits;
 
 pub use css_parser::*;
 pub use file_walker::*;
@@ -17,6 +18,7 @@ pub use text_processor::*;
 pub use unused_detector::*;
 pub use utils::*;
 pub use config::Config;
+pub use traits::*;
 
 use tauri::Emitter;
 use std::fs;

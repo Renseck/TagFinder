@@ -1,6 +1,8 @@
 use std::collections::HashSet;
 use crate::text_processor::{TextProcessor};
 use crate::parallel_processor::ParallelProcessor;
+use crate::ProcessorBuilder;
+use crate::traits::ThreadCountConfigurable;
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc};
 use std::path::PathBuf;
@@ -26,12 +28,6 @@ impl CssParser {
     }
 
     /* ========================================================================================== */
-    pub fn with_thread_count(mut self, count: usize) -> Self {
-        self.thread_count = Some(count);
-        self
-    }
-
-    /* ========================================================================================== */
     pub fn with_progress_emitter(mut self, app: tauri::AppHandle) -> Self {
         self.progress_emitter = Some(app);
         self
@@ -44,7 +40,7 @@ impl CssParser {
                 .add_pattern("css_class", r"\.([a-zA-Z][a-zA-Z0-9_-]*)")?
         );
 
-        let mut parallel_processor = ParallelProcessor::new(self.thread_count);
+        let mut parallel_processor = ParallelProcessor::new().configure_threads(self.thread_count);
         
         if let Some(ref app) = self.progress_emitter {
             parallel_processor = parallel_processor.with_progress_emitter(app.clone());
@@ -90,5 +86,12 @@ impl CssParser {
             let key = (class.name.clone(), class.file.clone());
             seen.insert(key)
         });
+    }
+}
+
+impl ThreadCountConfigurable for CssParser {
+    fn with_thread_count(mut self, count: usize) -> Self {
+        self.thread_count = Some(count);
+        self
     }
 }

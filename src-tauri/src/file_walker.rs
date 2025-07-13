@@ -2,6 +2,8 @@ use walkdir::WalkDir;
 use std::path::{Path, PathBuf};
 use crate::config::Config;
 use crate::parallel_processor::ParallelProcessor;
+use crate::traits::{ThreadCountConfigurable, ConfigConfigurable};
+use crate::ProcessorBuilder;
 
 pub struct FileWalker {
     directory: String,
@@ -20,47 +22,6 @@ impl FileWalker {
             config: None,
             progress_emitter: None,
         }
-    }
-
-    /* ========================================================================================== */
-    pub fn with_thread_count(mut self, count: usize) -> Self {
-        self.thread_count = Some(count);
-        self
-    }
-
-    /* ========================================================================================== */
-    pub fn with_config(mut self, config: Config) -> Self {
-        let exclude_dirs = config.scan.exclude_dirs.clone();
-        let include_extensions = config.scan.include_extensions.clone();
-        let css_extensions = config.scan.css_extensions.clone();
-        
-        // Combine include and CSS extensions for file filtering
-        let all_allowed_extensions = {
-            let mut combined = include_extensions.clone();
-            combined.extend(css_extensions);
-            combined
-        };
-        
-        self.file_filter = Box::new(move |path: &Path| {
-            // Check directory exclusions
-            for component in path.components() {
-                if let Some(dir_name) = component.as_os_str().to_str() {
-                    if exclude_dirs.iter().any(|excluded| excluded == dir_name) {
-                        return false;
-                    }
-                }
-            }
-            
-            // Check file extension inclusions
-            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
-                all_allowed_extensions.iter().any(|allowed| allowed == ext)
-            } else {
-                false // Exclude files without extensions
-            }
-        });
-
-        self.config = Some(config);
-        self
     }
 
     /* ========================================================================================== */
@@ -100,7 +61,7 @@ impl FileWalker {
     pub fn walk_with_content_parallel(&self) -> Result<Vec<(PathBuf, String)>, Box<dyn std::error::Error>> {
         let files = self.walk()?;
 
-        let mut parallel_processor = ParallelProcessor::new(self.thread_count);
+        let mut parallel_processor = ParallelProcessor::new().configure_threads(self.thread_count);
         
         if let Some(ref app) = self.progress_emitter {
             parallel_processor = parallel_processor.with_progress_emitter(app.clone());
@@ -140,6 +101,49 @@ impl FileWalker {
         F: Fn(&Path) -> bool + Send + Sync + 'static,
     {
         self.file_filter = Box::new(filter);
+        self
+    }
+}
+
+impl ThreadCountConfigurable for FileWalker {
+    fn with_thread_count(mut self, count: usize) -> Self {
+        self.thread_count = Some(count);
+        self
+    }
+}
+
+impl ConfigConfigurable for FileWalker {
+    fn with_config(mut self, config: Config) -> Self {
+        let exclude_dirs = config.scan.exclude_dirs.clone();
+        let include_extensions = config.scan.include_extensions.clone();
+        let css_extensions = config.scan.css_extensions.clone();
+        
+        // Combine include and CSS extensions for file filtering
+        let all_allowed_extensions = {
+            let mut combined = include_extensions.clone();
+            combined.extend(css_extensions);
+            combined
+        };
+        
+        self.file_filter = Box::new(move |path: &Path| {
+            // Check directory exclusions
+            for component in path.components() {
+                if let Some(dir_name) = component.as_os_str().to_str() {
+                    if exclude_dirs.iter().any(|excluded| excluded == dir_name) {
+                        return false;
+                    }
+                }
+            }
+            
+            // Check file extension inclusions
+            if let Some(ext) = path.extension().and_then(|e| e.to_str()) {
+                all_allowed_extensions.iter().any(|allowed| allowed == ext)
+            } else {
+                false // Exclude files without extensions
+            }
+        });
+
+        self.config = Some(config);
         self
     }
 }
