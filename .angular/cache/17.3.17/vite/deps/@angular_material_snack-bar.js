@@ -1,7 +1,14 @@
 import {
+  animate,
+  state,
+  style,
+  transition,
+  trigger
+} from "./chunk-EFA3U5X4.js";
+import {
   MatButton,
   MatButtonModule
-} from "./chunk-5WHAPJV6.js";
+} from "./chunk-7H33ZASB.js";
 import {
   BidiModule,
   BreakpointObserver,
@@ -11,6 +18,7 @@ import {
   LiveAnnouncer,
   MatCommonModule,
   Platform,
+  RtlScrollAxisType,
   _getEventTarget,
   _isTestEnvironment,
   coerceArray,
@@ -20,17 +28,8 @@ import {
   getRtlScrollAxisType,
   hasModifierKey,
   supportsScrollBehavior
-} from "./chunk-IMZILDRE.js";
+} from "./chunk-DHPSVXZE.js";
 import {
-  animate,
-  state,
-  style,
-  transition,
-  trigger
-} from "./chunk-CJAEDJKE.js";
-import "./chunk-VMOD6FLH.js";
-import {
-  CommonModule,
   DOCUMENT,
   Location
 } from "./chunk-LGDCM7U3.js";
@@ -404,6 +403,7 @@ var CdkPortal = class _CdkPortal extends TemplatePortal {
       type: _CdkPortal,
       selectors: [["", "cdkPortal", ""]],
       exportAs: ["cdkPortal"],
+      standalone: true,
       features: [ɵɵInheritDefinitionFeature]
     });
   }
@@ -413,7 +413,8 @@ var CdkPortal = class _CdkPortal extends TemplatePortal {
     type: Directive,
     args: [{
       selector: "[cdkPortal]",
-      exportAs: "cdkPortal"
+      exportAs: "cdkPortal",
+      standalone: true
     }]
   }], () => [{
     type: TemplateRef
@@ -435,6 +436,7 @@ var TemplatePortalDirective = class _TemplatePortalDirective extends CdkPortal {
       type: _TemplatePortalDirective,
       selectors: [["", "cdk-portal", ""], ["", "portal", ""]],
       exportAs: ["cdkPortal"],
+      standalone: true,
       features: [ɵɵProvidersFeature([{
         provide: CdkPortal,
         useExisting: _TemplatePortalDirective
@@ -451,7 +453,8 @@ var TemplatePortalDirective = class _TemplatePortalDirective extends CdkPortal {
       providers: [{
         provide: CdkPortal,
         useExisting: TemplatePortalDirective
-      }]
+      }],
+      standalone: true
     }]
   }], null, null);
 })();
@@ -568,6 +571,7 @@ var CdkPortalOutlet = class _CdkPortalOutlet extends BasePortalOutlet {
         attached: "attached"
       },
       exportAs: ["cdkPortalOutlet"],
+      standalone: true,
       features: [ɵɵInheritDefinitionFeature]
     });
   }
@@ -578,7 +582,7 @@ var CdkPortalOutlet = class _CdkPortalOutlet extends BasePortalOutlet {
     args: [{
       selector: "[cdkPortalOutlet]",
       exportAs: "cdkPortalOutlet",
-      inputs: ["portal: cdkPortalOutlet"]
+      standalone: true
     }]
   }], () => [{
     type: ComponentFactoryResolver$1
@@ -591,6 +595,10 @@ var CdkPortalOutlet = class _CdkPortalOutlet extends BasePortalOutlet {
       args: [DOCUMENT]
     }]
   }], {
+    portal: [{
+      type: Input,
+      args: ["cdkPortalOutlet"]
+    }],
     attached: [{
       type: Output
     }]
@@ -613,6 +621,7 @@ var PortalHostDirective = class _PortalHostDirective extends CdkPortalOutlet {
         portal: [InputFlags.None, "cdkPortalHost", "portal"]
       },
       exportAs: ["cdkPortalHost"],
+      standalone: true,
       features: [ɵɵProvidersFeature([{
         provide: CdkPortalOutlet,
         useExisting: _PortalHostDirective
@@ -626,11 +635,15 @@ var PortalHostDirective = class _PortalHostDirective extends CdkPortalOutlet {
     args: [{
       selector: "[cdkPortalHost], [portalHost]",
       exportAs: "cdkPortalHost",
-      inputs: ["portal: cdkPortalHost"],
+      inputs: [{
+        name: "portal",
+        alias: "cdkPortalHost"
+      }],
       providers: [{
         provide: CdkPortalOutlet,
         useExisting: PortalHostDirective
-      }]
+      }],
+      standalone: true
     }]
   }], null, null);
 })();
@@ -643,7 +656,7 @@ var PortalModule = class _PortalModule {
   static {
     this.ɵmod = ɵɵdefineNgModule({
       type: _PortalModule,
-      declarations: [CdkPortal, CdkPortalOutlet, TemplatePortalDirective, PortalHostDirective],
+      imports: [CdkPortal, CdkPortalOutlet, TemplatePortalDirective, PortalHostDirective],
       exports: [CdkPortal, CdkPortalOutlet, TemplatePortalDirective, PortalHostDirective]
     });
   }
@@ -655,8 +668,8 @@ var PortalModule = class _PortalModule {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(PortalModule, [{
     type: NgModule,
     args: [{
-      exports: [CdkPortal, CdkPortalOutlet, TemplatePortalDirective, PortalHostDirective],
-      declarations: [CdkPortal, CdkPortalOutlet, TemplatePortalDirective, PortalHostDirective]
+      imports: [CdkPortal, CdkPortalOutlet, TemplatePortalDirective, PortalHostDirective],
+      exports: [CdkPortal, CdkPortalOutlet, TemplatePortalDirective, PortalHostDirective]
     }]
   }], null, null);
 })();
@@ -678,6 +691,14 @@ var ArrayDataSource = class extends DataSource {
   disconnect() {
   }
 };
+var _ViewRepeaterOperation;
+(function(_ViewRepeaterOperation2) {
+  _ViewRepeaterOperation2[_ViewRepeaterOperation2["REPLACED"] = 0] = "REPLACED";
+  _ViewRepeaterOperation2[_ViewRepeaterOperation2["INSERTED"] = 1] = "INSERTED";
+  _ViewRepeaterOperation2[_ViewRepeaterOperation2["MOVED"] = 2] = "MOVED";
+  _ViewRepeaterOperation2[_ViewRepeaterOperation2["REMOVED"] = 3] = "REMOVED";
+})(_ViewRepeaterOperation || (_ViewRepeaterOperation = {}));
+var _VIEW_REPEATER_STRATEGY = new InjectionToken("_ViewRepeater");
 var _RecycleViewRepeaterStrategy = class {
   constructor() {
     this.viewCacheSize = 20;
@@ -691,13 +712,13 @@ var _RecycleViewRepeaterStrategy = class {
       if (record.previousIndex == null) {
         const viewArgsFactory = () => itemContextFactory(record, adjustedPreviousIndex, currentIndex);
         view = this._insertView(viewArgsFactory, currentIndex, viewContainerRef, itemValueResolver(record));
-        operation = view ? 1 : 0;
+        operation = view ? _ViewRepeaterOperation.INSERTED : _ViewRepeaterOperation.REPLACED;
       } else if (currentIndex == null) {
         this._detachAndCacheView(adjustedPreviousIndex, viewContainerRef);
-        operation = 3;
+        operation = _ViewRepeaterOperation.REMOVED;
       } else {
         view = this._moveView(adjustedPreviousIndex, currentIndex, viewContainerRef, itemValueResolver(record));
-        operation = 2;
+        operation = _ViewRepeaterOperation.MOVED;
       }
       if (itemViewChanged) {
         itemViewChanged({
@@ -814,7 +835,6 @@ var UniqueSelectionDispatcher = class _UniqueSelectionDispatcher {
     }]
   }], null, null);
 })();
-var _VIEW_REPEATER_STRATEGY = new InjectionToken("_ViewRepeater");
 
 // node_modules/@angular/cdk/fesm2022/scrolling.mjs
 var _c0 = ["contentWrapper"];
@@ -1221,13 +1241,13 @@ var CdkScrollable = class _CdkScrollable {
     if (options.bottom != null) {
       options.top = el.scrollHeight - el.clientHeight - options.bottom;
     }
-    if (isRtl && getRtlScrollAxisType() != 0) {
+    if (isRtl && getRtlScrollAxisType() != RtlScrollAxisType.NORMAL) {
       if (options.left != null) {
         options.right = el.scrollWidth - el.clientWidth - options.left;
       }
-      if (getRtlScrollAxisType() == 2) {
+      if (getRtlScrollAxisType() == RtlScrollAxisType.INVERTED) {
         options.left = options.right;
-      } else if (getRtlScrollAxisType() == 1) {
+      } else if (getRtlScrollAxisType() == RtlScrollAxisType.NEGATED) {
         options.left = options.right ? -options.right : options.right;
       }
     } else {
@@ -1275,13 +1295,13 @@ var CdkScrollable = class _CdkScrollable {
     } else if (from == "end") {
       from = isRtl ? LEFT : RIGHT;
     }
-    if (isRtl && getRtlScrollAxisType() == 2) {
+    if (isRtl && getRtlScrollAxisType() == RtlScrollAxisType.INVERTED) {
       if (from == LEFT) {
         return el.scrollWidth - el.clientWidth - el.scrollLeft;
       } else {
         return el.scrollLeft;
       }
-    } else if (isRtl && getRtlScrollAxisType() == 1) {
+    } else if (isRtl && getRtlScrollAxisType() == RtlScrollAxisType.NEGATED) {
       if (from == LEFT) {
         return el.scrollLeft + el.scrollWidth - el.clientWidth;
       } else {
@@ -1368,7 +1388,7 @@ var ViewportRuler = class _ViewportRuler {
     }
     return output;
   }
-  /** Gets a ClientRect for the viewport's bounds. */
+  /** Gets a DOMRect for the viewport's bounds. */
   getViewportRect() {
     const scrollPosition = this.getViewportScrollPosition();
     const {
@@ -3747,12 +3767,15 @@ var FlexibleConnectedPositionStrategy = class {
     if (position.panelClass) {
       this._addPanelClasses(position.panelClass);
     }
-    this._lastPosition = position;
     if (this._positionChanges.observers.length) {
-      const scrollableViewProperties = this._getScrollVisibility();
-      const changeEvent = new ConnectedOverlayPositionChange(position, scrollableViewProperties);
-      this._positionChanges.next(changeEvent);
+      const scrollVisibility = this._getScrollVisibility();
+      if (position !== this._lastPosition || !this._lastScrollVisibility || !compareScrollVisibility(this._lastScrollVisibility, scrollVisibility)) {
+        const changeEvent = new ConnectedOverlayPositionChange(position, scrollVisibility);
+        this._positionChanges.next(changeEvent);
+      }
+      this._lastScrollVisibility = scrollVisibility;
     }
+    this._lastPosition = position;
     this._isInitialRender = false;
   }
   /** Sets the transform origin based on the configured selector and the passed-in position.  */
@@ -3803,7 +3826,7 @@ var FlexibleConnectedPositionStrategy = class {
     const isBoundedByLeftViewportEdge = position.overlayX === "end" && !isRtl || position.overlayX === "start" && isRtl;
     let width, left, right;
     if (isBoundedByLeftViewportEdge) {
-      right = viewport.width - origin.x + this._viewportMargin;
+      right = viewport.width - origin.x + this._viewportMargin * 2;
       width = origin.x - this._viewportMargin;
     } else if (isBoundedByRightViewportEdge) {
       left = origin.x;
@@ -4064,7 +4087,7 @@ var FlexibleConnectedPositionStrategy = class {
       this._appliedPanelClasses = [];
     }
   }
-  /** Returns the ClientRect of the current origin. */
+  /** Returns the DOMRect of the current origin. */
   _getOriginRect() {
     const origin = this._origin;
     if (origin instanceof ElementRef) {
@@ -4109,6 +4132,12 @@ function getRoundedBoundingClientRect(clientRect) {
     width: Math.floor(clientRect.width),
     height: Math.floor(clientRect.height)
   };
+}
+function compareScrollVisibility(a, b) {
+  if (a === b) {
+    return true;
+  }
+  return a.isOriginClipped === b.isOriginClipped && a.isOriginOutsideView === b.isOriginOutsideView && a.isOverlayClipped === b.isOverlayClipped && a.isOverlayOutsideView === b.isOverlayOutsideView;
 }
 var wrapperClass = "cdk-global-overlay-wrapper";
 var GlobalPositionStrategy = class {
@@ -4523,7 +4552,13 @@ var defaultPositionList = [{
   overlayX: "end",
   overlayY: "top"
 }];
-var CDK_CONNECTED_OVERLAY_SCROLL_STRATEGY = new InjectionToken("cdk-connected-overlay-scroll-strategy");
+var CDK_CONNECTED_OVERLAY_SCROLL_STRATEGY = new InjectionToken("cdk-connected-overlay-scroll-strategy", {
+  providedIn: "root",
+  factory: () => {
+    const overlay = inject(Overlay);
+    return () => overlay.scrollStrategies.reposition();
+  }
+});
 var CdkOverlayOrigin = class _CdkOverlayOrigin {
   constructor(elementRef) {
     this.elementRef = elementRef;
@@ -4591,6 +4626,7 @@ var CdkConnectedOverlay = class _CdkConnectedOverlay {
     this._detachSubscription = Subscription.EMPTY;
     this._positionSubscription = Subscription.EMPTY;
     this._disposeOnNavigation = false;
+    this._ngZone = inject(NgZone);
     this.viewportMargin = 0;
     this.open = false;
     this.disableClose = false;
@@ -4659,7 +4695,11 @@ var CdkConnectedOverlay = class _CdkConnectedOverlay {
       }
     });
     this._overlayRef.outsidePointerEvents().subscribe((event) => {
-      this.overlayOutsideClick.next(event);
+      const origin = this._getOriginElement();
+      const target = _getEventTarget(event);
+      if (!origin || origin !== target && !origin.contains(target)) {
+        this.overlayOutsideClick.next(event);
+      }
     });
   }
   /** Builds the overlay config based on the directive's inputs */
@@ -4703,20 +4743,32 @@ var CdkConnectedOverlay = class _CdkConnectedOverlay {
       offsetY: currentPosition.offsetY || this.offsetY,
       panelClass: currentPosition.panelClass || void 0
     }));
-    return positionStrategy.setOrigin(this._getFlexibleConnectedPositionStrategyOrigin()).withPositions(positions).withFlexibleDimensions(this.flexibleDimensions).withPush(this.push).withGrowAfterOpen(this.growAfterOpen).withViewportMargin(this.viewportMargin).withLockedPosition(this.lockPosition).withTransformOriginOn(this.transformOriginSelector);
+    return positionStrategy.setOrigin(this._getOrigin()).withPositions(positions).withFlexibleDimensions(this.flexibleDimensions).withPush(this.push).withGrowAfterOpen(this.growAfterOpen).withViewportMargin(this.viewportMargin).withLockedPosition(this.lockPosition).withTransformOriginOn(this.transformOriginSelector);
   }
   /** Returns the position strategy of the overlay to be set on the overlay config */
   _createPositionStrategy() {
-    const strategy = this._overlay.position().flexibleConnectedTo(this._getFlexibleConnectedPositionStrategyOrigin());
+    const strategy = this._overlay.position().flexibleConnectedTo(this._getOrigin());
     this._updatePositionStrategy(strategy);
     return strategy;
   }
-  _getFlexibleConnectedPositionStrategyOrigin() {
+  _getOrigin() {
     if (this.origin instanceof CdkOverlayOrigin) {
       return this.origin.elementRef;
     } else {
       return this.origin;
     }
+  }
+  _getOriginElement() {
+    if (this.origin instanceof CdkOverlayOrigin) {
+      return this.origin.elementRef.nativeElement;
+    }
+    if (this.origin instanceof ElementRef) {
+      return this.origin.nativeElement;
+    }
+    if (typeof Element !== "undefined" && this.origin instanceof Element) {
+      return this.origin;
+    }
+    return null;
   }
   /** Attaches the overlay and subscribes to backdrop clicks if backdrop exists */
   _attachOverlay() {
@@ -4738,7 +4790,7 @@ var CdkConnectedOverlay = class _CdkConnectedOverlay {
     this._positionSubscription.unsubscribe();
     if (this.positionChange.observers.length > 0) {
       this._positionSubscription = this._position.positionChanges.pipe(takeWhile(() => this.positionChange.observers.length > 0)).subscribe((position) => {
-        this.positionChange.emit(position);
+        this._ngZone.run(() => this.positionChange.emit(position));
         if (this.positionChange.observers.length === 0) {
           this._positionSubscription.unsubscribe();
         }
@@ -5305,7 +5357,7 @@ var SimpleSnackBar = class _SimpleSnackBar {
           ɵɵconditional(2, ctx.hasAction ? 2 : -1);
         }
       },
-      dependencies: [MatButtonModule, MatButton, MatSnackBarLabel, MatSnackBarActions, MatSnackBarAction, CommonModule],
+      dependencies: [MatButton, MatSnackBarLabel, MatSnackBarActions, MatSnackBarAction],
       styles: [".mat-mdc-simple-snack-bar{display:flex}"],
       encapsulation: 2,
       changeDetection: 0
@@ -5320,7 +5372,7 @@ var SimpleSnackBar = class _SimpleSnackBar {
       exportAs: "matSnackBar",
       encapsulation: ViewEncapsulation$1.None,
       changeDetection: ChangeDetectionStrategy.OnPush,
-      imports: [MatButtonModule, MatSnackBarLabel, MatSnackBarActions, MatSnackBarAction, CommonModule],
+      imports: [MatButton, MatSnackBarLabel, MatSnackBarActions, MatSnackBarAction],
       standalone: true,
       host: {
         "class": "mat-mdc-simple-snack-bar"
@@ -5425,6 +5477,7 @@ var MatSnackBarContainer = class _MatSnackBarContainer extends BasePortalOutlet 
   enter() {
     if (!this._destroyed) {
       this._animationState = "visible";
+      this._changeDetectorRef.markForCheck();
       this._changeDetectorRef.detectChanges();
       this._screenReaderAnnounce();
     }
@@ -5433,6 +5486,7 @@ var MatSnackBarContainer = class _MatSnackBarContainer extends BasePortalOutlet 
   exit() {
     this._ngZone.run(() => {
       this._animationState = "hidden";
+      this._changeDetectorRef.markForCheck();
       this._elementRef.nativeElement.setAttribute("mat-exit", "");
       clearTimeout(this._announceTimeoutId);
     });
@@ -5445,15 +5499,13 @@ var MatSnackBarContainer = class _MatSnackBarContainer extends BasePortalOutlet 
     this._completeExit();
   }
   /**
-   * Waits for the zone to settle before removing the element. Helps prevent
-   * errors where we end up removing an element which is in the middle of an animation.
+   * Removes the element in a microtask. Helps prevent errors where we end up
+   * removing an element which is in the middle of an animation.
    */
   _completeExit() {
-    this._ngZone.onMicrotaskEmpty.pipe(take(1)).subscribe(() => {
-      this._ngZone.run(() => {
-        this._onExit.next();
-        this._onExit.complete();
-      });
+    queueMicrotask(() => {
+      this._onExit.next();
+      this._onExit.complete();
     });
   }
   /**
@@ -5590,7 +5642,7 @@ var MatSnackBarContainer = class _MatSnackBarContainer extends BasePortalOutlet 
           ɵɵattribute("aria-live", ctx._live)("role", ctx._role)("id", ctx._liveElementId);
         }
       },
-      dependencies: [PortalModule, CdkPortalOutlet],
+      dependencies: [CdkPortalOutlet],
       styles: ['.mdc-snackbar{display:none;position:fixed;right:0;bottom:0;left:0;align-items:center;justify-content:center;box-sizing:border-box;pointer-events:none;-webkit-tap-highlight-color:rgba(0,0,0,0)}.mdc-snackbar--opening,.mdc-snackbar--open,.mdc-snackbar--closing{display:flex}.mdc-snackbar--open .mdc-snackbar__label,.mdc-snackbar--open .mdc-snackbar__actions{visibility:visible}.mdc-snackbar__surface{padding-left:0;padding-right:8px;display:flex;align-items:center;justify-content:flex-start;box-sizing:border-box;transform:scale(0.8);opacity:0}.mdc-snackbar__surface::before{position:absolute;box-sizing:border-box;width:100%;height:100%;top:0;left:0;border:1px solid rgba(0,0,0,0);border-radius:inherit;content:"";pointer-events:none}@media screen and (forced-colors: active){.mdc-snackbar__surface::before{border-color:CanvasText}}[dir=rtl] .mdc-snackbar__surface,.mdc-snackbar__surface[dir=rtl]{padding-left:8px;padding-right:0}.mdc-snackbar--open .mdc-snackbar__surface{transform:scale(1);opacity:1;pointer-events:auto}.mdc-snackbar--closing .mdc-snackbar__surface{transform:scale(1)}.mdc-snackbar__label{padding-left:16px;padding-right:8px;width:100%;flex-grow:1;box-sizing:border-box;margin:0;visibility:hidden;padding-top:14px;padding-bottom:14px}[dir=rtl] .mdc-snackbar__label,.mdc-snackbar__label[dir=rtl]{padding-left:8px;padding-right:16px}.mdc-snackbar__label::before{display:inline;content:attr(data-mdc-snackbar-label-text)}.mdc-snackbar__actions{display:flex;flex-shrink:0;align-items:center;box-sizing:border-box;visibility:hidden}.mdc-snackbar__action+.mdc-snackbar__dismiss{margin-left:8px;margin-right:0}[dir=rtl] .mdc-snackbar__action+.mdc-snackbar__dismiss,.mdc-snackbar__action+.mdc-snackbar__dismiss[dir=rtl]{margin-left:0;margin-right:8px}.mat-mdc-snack-bar-container{margin:8px;position:static}.mat-mdc-snack-bar-container .mdc-snackbar__surface{min-width:344px}@media(max-width: 480px),(max-width: 344px){.mat-mdc-snack-bar-container .mdc-snackbar__surface{min-width:100%}}@media(max-width: 480px),(max-width: 344px){.mat-mdc-snack-bar-container{width:100vw}}.mat-mdc-snack-bar-container .mdc-snackbar__surface{max-width:672px}.mat-mdc-snack-bar-container .mdc-snackbar__surface{box-shadow:0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 6px 10px 0px rgba(0, 0, 0, 0.14), 0px 1px 18px 0px rgba(0, 0, 0, 0.12)}.mat-mdc-snack-bar-container .mdc-snackbar__surface{background-color:var(--mdc-snackbar-container-color)}.mat-mdc-snack-bar-container .mdc-snackbar__surface{border-radius:var(--mdc-snackbar-container-shape)}.mat-mdc-snack-bar-container .mdc-snackbar__label{color:var(--mdc-snackbar-supporting-text-color)}.mat-mdc-snack-bar-container .mdc-snackbar__label{font-size:var(--mdc-snackbar-supporting-text-size);font-family:var(--mdc-snackbar-supporting-text-font);font-weight:var(--mdc-snackbar-supporting-text-weight);line-height:var(--mdc-snackbar-supporting-text-line-height)}.mat-mdc-snack-bar-container .mat-mdc-button.mat-mdc-snack-bar-action:not(:disabled){color:var(--mat-snack-bar-button-color);--mat-text-button-state-layer-color:currentColor;--mat-text-button-ripple-color:currentColor}.mat-mdc-snack-bar-container .mat-mdc-button.mat-mdc-snack-bar-action:not(:disabled) .mat-ripple-element{opacity:.1}.mat-mdc-snack-bar-container .mdc-snackbar__label::before{display:none}.mat-mdc-snack-bar-handset,.mat-mdc-snack-bar-container,.mat-mdc-snack-bar-label{flex:1 1 auto}.mat-mdc-snack-bar-handset .mdc-snackbar__surface{width:100%}'],
       encapsulation: 2,
       data: {
@@ -5608,13 +5660,13 @@ var MatSnackBarContainer = class _MatSnackBarContainer extends BasePortalOutlet 
       encapsulation: ViewEncapsulation$1.None,
       animations: [matSnackBarAnimations.snackBarState],
       standalone: true,
-      imports: [PortalModule],
+      imports: [CdkPortalOutlet],
       host: {
         "class": "mdc-snackbar mat-mdc-snack-bar-container mdc-snackbar--open",
         "[@state]": "_animationState",
         "(@state.done)": "onAnimationEnd($event)"
       },
-      template: '<div class="mdc-snackbar__surface">\n  <!--\n    This outer label wrapper will have the class `mdc-snackbar__label` applied if\n    the attached template/component does not contain it.\n  -->\n  <div class="mat-mdc-snack-bar-label" #label>\n    <!-- Initialy holds the snack bar content, will be empty after announcing to screen readers. -->\n    <div aria-hidden="true">\n      <ng-template cdkPortalOutlet></ng-template>\n    </div>\n\n    <!-- Will receive the snack bar content from the non-live div, move will happen a short delay after opening -->\n    <div [attr.aria-live]="_live" [attr.role]="_role" [attr.id]="_liveElementId"></div>\n  </div>\n</div>\n',
+      template: '<div class="mdc-snackbar__surface">\n  <!--\n    This outer label wrapper will have the class `mdc-snackbar__label` applied if\n    the attached template/component does not contain it.\n  -->\n  <div class="mat-mdc-snack-bar-label" #label>\n    <!-- Initialy holds the snack bar content, will be empty after announcing to screen readers. -->\n    <div aria-hidden="true">\n      <ng-template cdkPortalOutlet />\n    </div>\n\n    <!-- Will receive the snack bar content from the non-live div, move will happen a short delay after opening -->\n    <div [attr.aria-live]="_live" [attr.role]="_role" [attr.id]="_liveElementId"></div>\n  </div>\n</div>\n',
       styles: ['.mdc-snackbar{display:none;position:fixed;right:0;bottom:0;left:0;align-items:center;justify-content:center;box-sizing:border-box;pointer-events:none;-webkit-tap-highlight-color:rgba(0,0,0,0)}.mdc-snackbar--opening,.mdc-snackbar--open,.mdc-snackbar--closing{display:flex}.mdc-snackbar--open .mdc-snackbar__label,.mdc-snackbar--open .mdc-snackbar__actions{visibility:visible}.mdc-snackbar__surface{padding-left:0;padding-right:8px;display:flex;align-items:center;justify-content:flex-start;box-sizing:border-box;transform:scale(0.8);opacity:0}.mdc-snackbar__surface::before{position:absolute;box-sizing:border-box;width:100%;height:100%;top:0;left:0;border:1px solid rgba(0,0,0,0);border-radius:inherit;content:"";pointer-events:none}@media screen and (forced-colors: active){.mdc-snackbar__surface::before{border-color:CanvasText}}[dir=rtl] .mdc-snackbar__surface,.mdc-snackbar__surface[dir=rtl]{padding-left:8px;padding-right:0}.mdc-snackbar--open .mdc-snackbar__surface{transform:scale(1);opacity:1;pointer-events:auto}.mdc-snackbar--closing .mdc-snackbar__surface{transform:scale(1)}.mdc-snackbar__label{padding-left:16px;padding-right:8px;width:100%;flex-grow:1;box-sizing:border-box;margin:0;visibility:hidden;padding-top:14px;padding-bottom:14px}[dir=rtl] .mdc-snackbar__label,.mdc-snackbar__label[dir=rtl]{padding-left:8px;padding-right:16px}.mdc-snackbar__label::before{display:inline;content:attr(data-mdc-snackbar-label-text)}.mdc-snackbar__actions{display:flex;flex-shrink:0;align-items:center;box-sizing:border-box;visibility:hidden}.mdc-snackbar__action+.mdc-snackbar__dismiss{margin-left:8px;margin-right:0}[dir=rtl] .mdc-snackbar__action+.mdc-snackbar__dismiss,.mdc-snackbar__action+.mdc-snackbar__dismiss[dir=rtl]{margin-left:0;margin-right:8px}.mat-mdc-snack-bar-container{margin:8px;position:static}.mat-mdc-snack-bar-container .mdc-snackbar__surface{min-width:344px}@media(max-width: 480px),(max-width: 344px){.mat-mdc-snack-bar-container .mdc-snackbar__surface{min-width:100%}}@media(max-width: 480px),(max-width: 344px){.mat-mdc-snack-bar-container{width:100vw}}.mat-mdc-snack-bar-container .mdc-snackbar__surface{max-width:672px}.mat-mdc-snack-bar-container .mdc-snackbar__surface{box-shadow:0px 3px 5px -1px rgba(0, 0, 0, 0.2), 0px 6px 10px 0px rgba(0, 0, 0, 0.14), 0px 1px 18px 0px rgba(0, 0, 0, 0.12)}.mat-mdc-snack-bar-container .mdc-snackbar__surface{background-color:var(--mdc-snackbar-container-color)}.mat-mdc-snack-bar-container .mdc-snackbar__surface{border-radius:var(--mdc-snackbar-container-shape)}.mat-mdc-snack-bar-container .mdc-snackbar__label{color:var(--mdc-snackbar-supporting-text-color)}.mat-mdc-snack-bar-container .mdc-snackbar__label{font-size:var(--mdc-snackbar-supporting-text-size);font-family:var(--mdc-snackbar-supporting-text-font);font-weight:var(--mdc-snackbar-supporting-text-weight);line-height:var(--mdc-snackbar-supporting-text-line-height)}.mat-mdc-snack-bar-container .mat-mdc-button.mat-mdc-snack-bar-action:not(:disabled){color:var(--mat-snack-bar-button-color);--mat-text-button-state-layer-color:currentColor;--mat-text-button-ripple-color:currentColor}.mat-mdc-snack-bar-container .mat-mdc-button.mat-mdc-snack-bar-action:not(:disabled) .mat-ripple-element{opacity:.1}.mat-mdc-snack-bar-container .mdc-snackbar__label::before{display:none}.mat-mdc-snack-bar-handset,.mat-mdc-snack-bar-container,.mat-mdc-snack-bar-label{flex:1 1 auto}.mat-mdc-snack-bar-handset .mdc-snackbar__surface{width:100%}']
     }]
   }], () => [{
@@ -5898,7 +5950,7 @@ var MatSnackBarModule = class _MatSnackBarModule {
   static {
     this.ɵinj = ɵɵdefineInjector({
       providers: [MatSnackBar],
-      imports: [OverlayModule, PortalModule, MatButtonModule, MatCommonModule, SimpleSnackBar, MatSnackBarContainer, MatCommonModule]
+      imports: [OverlayModule, PortalModule, MatButtonModule, MatCommonModule, SimpleSnackBar, MatCommonModule]
     });
   }
 };

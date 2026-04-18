@@ -1,7 +1,7 @@
 import {
   invoke,
   transformCallback
-} from "./chunk-XEW3DY3V.js";
+} from "./chunk-GWGCYHGC.js";
 import {
   __async
 } from "./chunk-WDMUDEB6.js";
@@ -26,6 +26,7 @@ var TauriEvent;
 })(TauriEvent || (TauriEvent = {}));
 function _unlisten(event, eventId) {
   return __async(this, null, function* () {
+    window.__TAURI_EVENT_PLUGIN_INTERNALS__.unregisterListener(event, eventId);
     yield invoke("plugin:event|unlisten", {
       event,
       eventId
@@ -50,7 +51,7 @@ function listen(event, handler, options) {
 function once(event, handler, options) {
   return __async(this, null, function* () {
     return listen(event, (eventData) => {
-      _unlisten(event, eventData.id);
+      void _unlisten(event, eventData.id);
       handler(eventData);
     }, options);
   });

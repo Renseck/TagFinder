@@ -1,17 +1,4 @@
 import {
-  AnimationDriver,
-  AnimationEngine,
-  AnimationRendererFactory,
-  AnimationStyleNormalizer,
-  NoopAnimationDriver,
-  WebAnimationsDriver,
-  WebAnimationsStyleNormalizer
-} from "./chunk-CJAEDJKE.js";
-import {
-  BrowserModule,
-  DomRendererFactory2
-} from "./chunk-VMOD6FLH.js";
-import {
   DOCUMENT,
   isPlatformBrowser
 } from "./chunk-LGDCM7U3.js";
@@ -19,7 +6,6 @@ import {
   ANIMATION_MODULE_TYPE,
   APP_ID,
   CSP_NONCE,
-  ChangeDetectionScheduler,
   ChangeDetectionStrategy,
   ChangeDetectorRef,
   Component,
@@ -38,16 +24,18 @@ import {
   Output,
   PLATFORM_ID,
   QueryList,
-  RendererFactory2,
   Version,
   ViewChild,
   ViewEncapsulation$1,
   booleanAttribute,
+  effect,
   inject,
+  isSignal,
   setClassMetadata,
   ɵɵInputTransformsFeature,
   ɵɵNgOnChangesFeature,
   ɵɵProvidersFeature,
+  ɵɵStandaloneFeature,
   ɵɵadvance,
   ɵɵattribute,
   ɵɵclassProp,
@@ -182,6 +170,12 @@ function supportsPassiveEventListeners() {
 function normalizePassiveListenerOptions(options) {
   return supportsPassiveEventListeners() ? options : !!options.capture;
 }
+var RtlScrollAxisType;
+(function(RtlScrollAxisType2) {
+  RtlScrollAxisType2[RtlScrollAxisType2["NORMAL"] = 0] = "NORMAL";
+  RtlScrollAxisType2[RtlScrollAxisType2["NEGATED"] = 1] = "NEGATED";
+  RtlScrollAxisType2[RtlScrollAxisType2["INVERTED"] = 2] = "INVERTED";
+})(RtlScrollAxisType || (RtlScrollAxisType = {}));
 var rtlScrollAxisType;
 var scrollBehaviorSupported;
 function supportsScrollBehavior() {
@@ -205,7 +199,7 @@ function supportsScrollBehavior() {
 }
 function getRtlScrollAxisType() {
   if (typeof document !== "object" || !document) {
-    return 0;
+    return RtlScrollAxisType.NORMAL;
   }
   if (rtlScrollAxisType == null) {
     const scrollContainer = document.createElement("div");
@@ -222,10 +216,10 @@ function getRtlScrollAxisType() {
     contentStyle.height = "1px";
     scrollContainer.appendChild(content);
     document.body.appendChild(scrollContainer);
-    rtlScrollAxisType = 0;
+    rtlScrollAxisType = RtlScrollAxisType.NORMAL;
     if (scrollContainer.scrollLeft === 0) {
       scrollContainer.scrollLeft = 1;
-      rtlScrollAxisType = scrollContainer.scrollLeft === 0 ? 1 : 2;
+      rtlScrollAxisType = scrollContainer.scrollLeft === 0 ? RtlScrollAxisType.NEGATED : RtlScrollAxisType.INVERTED;
     }
     scrollContainer.remove();
   }
@@ -412,7 +406,7 @@ function createEmptyStyleRule(query, nonce) {
     if (!mediaQueryStyleNode) {
       mediaQueryStyleNode = document.createElement("style");
       if (nonce) {
-        mediaQueryStyleNode.nonce = nonce;
+        mediaQueryStyleNode.setAttribute("nonce", nonce);
       }
       mediaQueryStyleNode.setAttribute("type", "text/css");
       document.head.appendChild(mediaQueryStyleNode);
@@ -553,6 +547,25 @@ var Breakpoints = {
 };
 
 // node_modules/@angular/cdk/fesm2022/observers.mjs
+function shouldIgnoreRecord(record) {
+  if (record.type === "characterData" && record.target instanceof Comment) {
+    return true;
+  }
+  if (record.type === "childList") {
+    for (let i = 0; i < record.addedNodes.length; i++) {
+      if (!(record.addedNodes[i] instanceof Comment)) {
+        return false;
+      }
+    }
+    for (let i = 0; i < record.removedNodes.length; i++) {
+      if (!(record.removedNodes[i] instanceof Comment)) {
+        return false;
+      }
+    }
+    return true;
+  }
+  return false;
+}
 var MutationObserverFactory = class _MutationObserverFactory {
   create(callback) {
     return typeof MutationObserver === "undefined" ? null : new MutationObserver(callback);
@@ -590,7 +603,7 @@ var ContentObserver = class _ContentObserver {
     const element = coerceElement(elementOrRef);
     return new Observable((observer) => {
       const stream = this._observeElement(element);
-      const subscription = stream.subscribe(observer);
+      const subscription = stream.pipe(map((records) => records.filter((record) => !shouldIgnoreRecord(record))), filter((records) => !!records.length)).subscribe(observer);
       return () => {
         subscription.unsubscribe();
         this._unobserveElement(element);
@@ -734,6 +747,7 @@ var CdkObserveContent = class _CdkObserveContent {
         event: "cdkObserveContent"
       },
       exportAs: ["cdkObserveContent"],
+      standalone: true,
       features: [ɵɵInputTransformsFeature]
     });
   }
@@ -743,7 +757,8 @@ var CdkObserveContent = class _CdkObserveContent {
     type: Directive,
     args: [{
       selector: "[cdkObserveContent]",
-      exportAs: "cdkObserveContent"
+      exportAs: "cdkObserveContent",
+      standalone: true
     }]
   }], () => [{
     type: ContentObserver
@@ -777,7 +792,7 @@ var ObserversModule = class _ObserversModule {
   static {
     this.ɵmod = ɵɵdefineNgModule({
       type: _ObserversModule,
-      declarations: [CdkObserveContent],
+      imports: [CdkObserveContent],
       exports: [CdkObserveContent]
     });
   }
@@ -791,8 +806,8 @@ var ObserversModule = class _ObserversModule {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(ObserversModule, [{
     type: NgModule,
     args: [{
+      imports: [CdkObserveContent],
       exports: [CdkObserveContent],
-      declarations: [CdkObserveContent],
       providers: [MutationObserverFactory]
     }]
   }], null, null);
@@ -802,15 +817,17 @@ var ObserversModule = class _ObserversModule {
 var ID_DELIMITER = " ";
 function addAriaReferencedId(el, attr, id) {
   const ids = getAriaReferenceIds(el, attr);
-  if (ids.some((existingId) => existingId.trim() == id.trim())) {
+  id = id.trim();
+  if (ids.some((existingId) => existingId.trim() === id)) {
     return;
   }
-  ids.push(id.trim());
+  ids.push(id);
   el.setAttribute(attr, ids.join(ID_DELIMITER));
 }
 function removeAriaReferencedId(el, attr, id) {
   const ids = getAriaReferenceIds(el, attr);
-  const filteredIds = ids.filter((val) => val != id.trim());
+  id = id.trim();
+  const filteredIds = ids.filter((val) => val !== id);
   if (filteredIds.length) {
     el.setAttribute(attr, filteredIds.join(ID_DELIMITER));
   } else {
@@ -818,7 +835,8 @@ function removeAriaReferencedId(el, attr, id) {
   }
 }
 function getAriaReferenceIds(el, attr) {
-  return (el.getAttribute(attr) || "").match(/\S+/g) || [];
+  const attrValue = el.getAttribute(attr);
+  return attrValue?.match(/\S+/g) ?? [];
 }
 var CDK_DESCRIBEDBY_ID_PREFIX = "cdk-describedby-message";
 var CDK_DESCRIBEDBY_HOST_ATTRIBUTE = "cdk-describedby-host";
@@ -1009,7 +1027,7 @@ function setMessageId(element, serviceId) {
   }
 }
 var ListKeyManager = class {
-  constructor(_items) {
+  constructor(_items, injector) {
     this._items = _items;
     this._activeItemIndex = -1;
     this._activeItem = null;
@@ -1028,14 +1046,13 @@ var ListKeyManager = class {
     this.tabOut = new Subject();
     this.change = new Subject();
     if (_items instanceof QueryList) {
-      this._itemChangesSubscription = _items.changes.subscribe((newItems) => {
-        if (this._activeItem) {
-          const itemArray = newItems.toArray();
-          const newIndex = itemArray.indexOf(this._activeItem);
-          if (newIndex > -1 && newIndex !== this._activeItemIndex) {
-            this._activeItemIndex = newIndex;
-          }
-        }
+      this._itemChangesSubscription = _items.changes.subscribe((newItems) => this._itemsChanged(newItems.toArray()));
+    } else if (isSignal(_items)) {
+      if (!injector && (typeof ngDevMode === "undefined" || ngDevMode)) {
+        throw new Error("ListKeyManager constructed with a signal must receive an injector");
+      }
+      this._effectRef = effect(() => this._itemsChanged(_items()), {
+        injector
       });
     }
   }
@@ -1087,8 +1104,11 @@ var ListKeyManager = class {
    * @param debounceInterval Time to wait after the last keystroke before setting the active item.
    */
   withTypeAhead(debounceInterval = 200) {
-    if ((typeof ngDevMode === "undefined" || ngDevMode) && this._items.length && this._items.some((item) => typeof item.getLabel !== "function")) {
-      throw Error("ListKeyManager items in typeahead mode must implement the `getLabel` method.");
+    if (typeof ngDevMode === "undefined" || ngDevMode) {
+      const items = this._getItemsArray();
+      if (items.length > 0 && items.some((item) => typeof item.getLabel !== "function")) {
+        throw Error("ListKeyManager items in typeahead mode must implement the `getLabel` method.");
+      }
     }
     this._typeaheadSubscription.unsubscribe();
     this._typeaheadSubscription = this._letterKeyStream.pipe(tap((letter) => this._pressedLetters.push(letter)), debounceTime(debounceInterval), filter(() => this._pressedLetters.length > 0), map(() => this._pressedLetters.join(""))).subscribe((inputString) => {
@@ -1243,7 +1263,7 @@ var ListKeyManager = class {
   }
   /** Sets the active item to the last enabled item in the list. */
   setLastItemActive() {
-    this._setActiveItemByIndex(this._items.length - 1, -1);
+    this._setActiveItemByIndex(this._getItemsArray().length - 1, -1);
   }
   /** Sets the active item to the next enabled item in the list. */
   setNextItemActive() {
@@ -1264,6 +1284,7 @@ var ListKeyManager = class {
   destroy() {
     this._typeaheadSubscription.unsubscribe();
     this._itemChangesSubscription?.unsubscribe();
+    this._effectRef?.destroy();
     this._letterKeyStream.complete();
     this.tabOut.complete();
     this.change.complete();
@@ -1321,7 +1342,19 @@ var ListKeyManager = class {
   }
   /** Returns the items as an array. */
   _getItemsArray() {
+    if (isSignal(this._items)) {
+      return this._items();
+    }
     return this._items instanceof QueryList ? this._items.toArray() : this._items;
+  }
+  /** Callback for when the items have changed. */
+  _itemsChanged(newItems) {
+    if (this._activeItem) {
+      const newIndex = newItems.indexOf(this._activeItem);
+      if (newIndex > -1 && newIndex !== this._activeItemIndex) {
+        this._activeItemIndex = newIndex;
+      }
+    }
   }
 };
 var FocusKeyManager = class extends ListKeyManager {
@@ -1788,44 +1821,49 @@ var FocusTrapFactory = class _FocusTrapFactory {
 var CdkTrapFocus = class _CdkTrapFocus {
   /** Whether the focus trap is active. */
   get enabled() {
-    return this.focusTrap.enabled;
+    return this.focusTrap?.enabled || false;
   }
   set enabled(value) {
-    this.focusTrap.enabled = value;
+    if (this.focusTrap) {
+      this.focusTrap.enabled = value;
+    }
   }
   constructor(_elementRef, _focusTrapFactory, _document) {
     this._elementRef = _elementRef;
     this._focusTrapFactory = _focusTrapFactory;
     this._previouslyFocusedElement = null;
-    this.focusTrap = this._focusTrapFactory.create(this._elementRef.nativeElement, true);
+    const platform = inject(Platform);
+    if (platform.isBrowser) {
+      this.focusTrap = this._focusTrapFactory.create(this._elementRef.nativeElement, true);
+    }
   }
   ngOnDestroy() {
-    this.focusTrap.destroy();
+    this.focusTrap?.destroy();
     if (this._previouslyFocusedElement) {
       this._previouslyFocusedElement.focus();
       this._previouslyFocusedElement = null;
     }
   }
   ngAfterContentInit() {
-    this.focusTrap.attachAnchors();
+    this.focusTrap?.attachAnchors();
     if (this.autoCapture) {
       this._captureFocus();
     }
   }
   ngDoCheck() {
-    if (!this.focusTrap.hasAttached()) {
+    if (this.focusTrap && !this.focusTrap.hasAttached()) {
       this.focusTrap.attachAnchors();
     }
   }
   ngOnChanges(changes) {
     const autoCaptureChange = changes["autoCapture"];
-    if (autoCaptureChange && !autoCaptureChange.firstChange && this.autoCapture && this.focusTrap.hasAttached()) {
+    if (autoCaptureChange && !autoCaptureChange.firstChange && this.autoCapture && this.focusTrap?.hasAttached()) {
       this._captureFocus();
     }
   }
   _captureFocus() {
     this._previouslyFocusedElement = _getFocusedElementPierceShadowDom();
-    this.focusTrap.focusInitialElementWhenReady();
+    this.focusTrap?.focusInitialElementWhenReady();
   }
   static {
     this.ɵfac = function CdkTrapFocus_Factory(t) {
@@ -1841,6 +1879,7 @@ var CdkTrapFocus = class _CdkTrapFocus {
         autoCapture: [InputFlags.HasDecoratorInputTransform, "cdkTrapFocusAutoCapture", "autoCapture", booleanAttribute]
       },
       exportAs: ["cdkTrapFocus"],
+      standalone: true,
       features: [ɵɵInputTransformsFeature, ɵɵNgOnChangesFeature]
     });
   }
@@ -1850,7 +1889,8 @@ var CdkTrapFocus = class _CdkTrapFocus {
     type: Directive,
     args: [{
       selector: "[cdkTrapFocus]",
-      exportAs: "cdkTrapFocus"
+      exportAs: "cdkTrapFocus",
+      standalone: true
     }]
   }], () => [{
     type: ElementRef
@@ -2225,7 +2265,7 @@ var LiveAnnouncer = class _LiveAnnouncer {
         if (typeof duration === "number") {
           this._previousTimeout = setTimeout(() => this.clear(), duration);
         }
-        this._currentResolve();
+        this._currentResolve?.();
         this._currentPromise = this._currentResolve = void 0;
       }, 100);
       return this._currentPromise;
@@ -2374,7 +2414,8 @@ var CdkAriaLive = class _CdkAriaLive {
         politeness: [InputFlags.None, "cdkAriaLive", "politeness"],
         duration: [InputFlags.None, "cdkAriaLiveDuration", "duration"]
       },
-      exportAs: ["cdkAriaLive"]
+      exportAs: ["cdkAriaLive"],
+      standalone: true
     });
   }
 };
@@ -2383,7 +2424,8 @@ var CdkAriaLive = class _CdkAriaLive {
     type: Directive,
     args: [{
       selector: "[cdkAriaLive]",
-      exportAs: "cdkAriaLive"
+      exportAs: "cdkAriaLive",
+      standalone: true
     }]
   }], () => [{
     type: ElementRef
@@ -2404,6 +2446,11 @@ var CdkAriaLive = class _CdkAriaLive {
     }]
   });
 })();
+var FocusMonitorDetectionMode;
+(function(FocusMonitorDetectionMode2) {
+  FocusMonitorDetectionMode2[FocusMonitorDetectionMode2["IMMEDIATE"] = 0] = "IMMEDIATE";
+  FocusMonitorDetectionMode2[FocusMonitorDetectionMode2["EVENTUAL"] = 1] = "EVENTUAL";
+})(FocusMonitorDetectionMode || (FocusMonitorDetectionMode = {}));
 var FOCUS_MONITOR_DEFAULT_OPTIONS = new InjectionToken("cdk-focus-monitor-default-options");
 var captureEventListenerOptions = normalizePassiveListenerOptions({
   passive: true,
@@ -2436,7 +2483,7 @@ var FocusMonitor = class _FocusMonitor {
       }
     };
     this._document = document2;
-    this._detectionMode = options?.detectionMode || 0;
+    this._detectionMode = options?.detectionMode || FocusMonitorDetectionMode.IMMEDIATE;
   }
   monitor(element, checkChildren = false) {
     const nativeElement = coerceElement(element);
@@ -2519,7 +2566,7 @@ var FocusMonitor = class _FocusMonitor {
    * @param focusEventTarget The target of the focus event under examination.
    */
   _shouldBeAttributedToTouch(focusEventTarget) {
-    return this._detectionMode === 1 || !!focusEventTarget?.contains(this._inputModalityDetector._mostRecentTarget);
+    return this._detectionMode === FocusMonitorDetectionMode.EVENTUAL || !!focusEventTarget?.contains(this._inputModalityDetector._mostRecentTarget);
   }
   /**
    * Sets the focus classes on the element based on the given focus origin.
@@ -2544,7 +2591,7 @@ var FocusMonitor = class _FocusMonitor {
     this._ngZone.runOutsideAngular(() => {
       this._origin = origin;
       this._originFromTouchInteraction = origin === "touch" && isFromInteraction;
-      if (this._detectionMode === 0) {
+      if (this._detectionMode === FocusMonitorDetectionMode.IMMEDIATE) {
         clearTimeout(this._originTimeoutId);
         const ms = this._originFromTouchInteraction ? TOUCH_BUFFER_MS : 1;
         this._originTimeoutId = setTimeout(() => this._origin = null, ms);
@@ -2750,7 +2797,8 @@ var CdkMonitorFocus = class _CdkMonitorFocus {
       outputs: {
         cdkFocusChange: "cdkFocusChange"
       },
-      exportAs: ["cdkMonitorFocus"]
+      exportAs: ["cdkMonitorFocus"],
+      standalone: true
     });
   }
 };
@@ -2759,7 +2807,8 @@ var CdkMonitorFocus = class _CdkMonitorFocus {
     type: Directive,
     args: [{
       selector: "[cdkMonitorElementFocus], [cdkMonitorSubtreeFocus]",
-      exportAs: "cdkMonitorFocus"
+      exportAs: "cdkMonitorFocus",
+      standalone: true
     }]
   }], () => [{
     type: ElementRef
@@ -2771,6 +2820,12 @@ var CdkMonitorFocus = class _CdkMonitorFocus {
     }]
   });
 })();
+var HighContrastMode;
+(function(HighContrastMode2) {
+  HighContrastMode2[HighContrastMode2["NONE"] = 0] = "NONE";
+  HighContrastMode2[HighContrastMode2["BLACK_ON_WHITE"] = 1] = "BLACK_ON_WHITE";
+  HighContrastMode2[HighContrastMode2["WHITE_ON_BLACK"] = 2] = "WHITE_ON_BLACK";
+})(HighContrastMode || (HighContrastMode = {}));
 var BLACK_ON_WHITE_CSS_CLASS = "cdk-high-contrast-black-on-white";
 var WHITE_ON_BLACK_CSS_CLASS = "cdk-high-contrast-white-on-black";
 var HIGH_CONTRAST_MODE_ACTIVE_CSS_CLASS = "cdk-high-contrast-active";
@@ -2788,7 +2843,7 @@ var HighContrastModeDetector = class _HighContrastModeDetector {
   /** Gets the current high-contrast-mode for the page. */
   getHighContrastMode() {
     if (!this._platform.isBrowser) {
-      return 0;
+      return HighContrastMode.NONE;
     }
     const testElement = this._document.createElement("div");
     testElement.style.backgroundColor = "rgb(1,2,3)";
@@ -2802,12 +2857,12 @@ var HighContrastModeDetector = class _HighContrastModeDetector {
       case "rgb(0,0,0)":
       case "rgb(45,50,54)":
       case "rgb(32,32,32)":
-        return 2;
+        return HighContrastMode.WHITE_ON_BLACK;
       case "rgb(255,255,255)":
       case "rgb(255,250,239)":
-        return 1;
+        return HighContrastMode.BLACK_ON_WHITE;
     }
-    return 0;
+    return HighContrastMode.NONE;
   }
   ngOnDestroy() {
     this._breakpointSubscription.unsubscribe();
@@ -2819,9 +2874,9 @@ var HighContrastModeDetector = class _HighContrastModeDetector {
       bodyClasses.remove(HIGH_CONTRAST_MODE_ACTIVE_CSS_CLASS, BLACK_ON_WHITE_CSS_CLASS, WHITE_ON_BLACK_CSS_CLASS);
       this._hasCheckedHighContrastMode = true;
       const mode = this.getHighContrastMode();
-      if (mode === 1) {
+      if (mode === HighContrastMode.BLACK_ON_WHITE) {
         bodyClasses.add(HIGH_CONTRAST_MODE_ACTIVE_CSS_CLASS, BLACK_ON_WHITE_CSS_CLASS);
-      } else if (mode === 2) {
+      } else if (mode === HighContrastMode.WHITE_ON_BLACK) {
         bodyClasses.add(HIGH_CONTRAST_MODE_ACTIVE_CSS_CLASS, WHITE_ON_BLACK_CSS_CLASS);
       }
     }
@@ -2867,8 +2922,7 @@ var A11yModule = class _A11yModule {
   static {
     this.ɵmod = ɵɵdefineNgModule({
       type: _A11yModule,
-      declarations: [CdkAriaLive, CdkTrapFocus, CdkMonitorFocus],
-      imports: [ObserversModule],
+      imports: [ObserversModule, CdkAriaLive, CdkTrapFocus, CdkMonitorFocus],
       exports: [CdkAriaLive, CdkTrapFocus, CdkMonitorFocus]
     });
   }
@@ -2882,8 +2936,7 @@ var A11yModule = class _A11yModule {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(A11yModule, [{
     type: NgModule,
     args: [{
-      imports: [ObserversModule],
-      declarations: [CdkAriaLive, CdkTrapFocus, CdkMonitorFocus],
+      imports: [ObserversModule, CdkAriaLive, CdkTrapFocus, CdkMonitorFocus],
       exports: [CdkAriaLive, CdkTrapFocus, CdkMonitorFocus]
     }]
   }], () => [{
@@ -3000,6 +3053,7 @@ var Dir = class _Dir {
         change: "dirChange"
       },
       exportAs: ["dir"],
+      standalone: true,
       features: [ɵɵProvidersFeature([{
         provide: Directionality,
         useExisting: _Dir
@@ -3019,7 +3073,8 @@ var Dir = class _Dir {
       host: {
         "[attr.dir]": "_rawDir"
       },
-      exportAs: "dir"
+      exportAs: "dir",
+      standalone: true
     }]
   }], null, {
     change: [{
@@ -3040,7 +3095,7 @@ var BidiModule = class _BidiModule {
   static {
     this.ɵmod = ɵɵdefineNgModule({
       type: _BidiModule,
-      declarations: [Dir],
+      imports: [Dir],
       exports: [Dir]
     });
   }
@@ -3052,164 +3107,14 @@ var BidiModule = class _BidiModule {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(BidiModule, [{
     type: NgModule,
     args: [{
-      exports: [Dir],
-      declarations: [Dir]
-    }]
-  }], null, null);
-})();
-
-// node_modules/@angular/platform-browser/fesm2022/animations.mjs
-var InjectableAnimationEngine = class _InjectableAnimationEngine extends AnimationEngine {
-  // The `ApplicationRef` is injected here explicitly to force the dependency ordering.
-  // Since the `ApplicationRef` should be created earlier before the `AnimationEngine`, they
-  // both have `ngOnDestroy` hooks and `flush()` must be called after all views are destroyed.
-  constructor(doc, driver, normalizer) {
-    super(doc, driver, normalizer, inject(ChangeDetectionScheduler, {
-      optional: true
-    }));
-  }
-  ngOnDestroy() {
-    this.flush();
-  }
-  static {
-    this.ɵfac = function InjectableAnimationEngine_Factory(t) {
-      return new (t || _InjectableAnimationEngine)(ɵɵinject(DOCUMENT), ɵɵinject(AnimationDriver), ɵɵinject(AnimationStyleNormalizer));
-    };
-  }
-  static {
-    this.ɵprov = ɵɵdefineInjectable({
-      token: _InjectableAnimationEngine,
-      factory: _InjectableAnimationEngine.ɵfac
-    });
-  }
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(InjectableAnimationEngine, [{
-    type: Injectable
-  }], () => [{
-    type: Document,
-    decorators: [{
-      type: Inject,
-      args: [DOCUMENT]
-    }]
-  }, {
-    type: AnimationDriver
-  }, {
-    type: AnimationStyleNormalizer
-  }], null);
-})();
-function instantiateDefaultStyleNormalizer() {
-  return new WebAnimationsStyleNormalizer();
-}
-function instantiateRendererFactory(renderer, engine, zone) {
-  return new AnimationRendererFactory(renderer, engine, zone);
-}
-var SHARED_ANIMATION_PROVIDERS = [{
-  provide: AnimationStyleNormalizer,
-  useFactory: instantiateDefaultStyleNormalizer
-}, {
-  provide: AnimationEngine,
-  useClass: InjectableAnimationEngine
-}, {
-  provide: RendererFactory2,
-  useFactory: instantiateRendererFactory,
-  deps: [DomRendererFactory2, AnimationEngine, NgZone]
-}];
-var BROWSER_ANIMATIONS_PROVIDERS = [{
-  provide: AnimationDriver,
-  useFactory: () => new WebAnimationsDriver()
-}, {
-  provide: ANIMATION_MODULE_TYPE,
-  useValue: "BrowserAnimations"
-}, ...SHARED_ANIMATION_PROVIDERS];
-var BROWSER_NOOP_ANIMATIONS_PROVIDERS = [{
-  provide: AnimationDriver,
-  useClass: NoopAnimationDriver
-}, {
-  provide: ANIMATION_MODULE_TYPE,
-  useValue: "NoopAnimations"
-}, ...SHARED_ANIMATION_PROVIDERS];
-var BrowserAnimationsModule = class _BrowserAnimationsModule {
-  /**
-   * Configures the module based on the specified object.
-   *
-   * @param config Object used to configure the behavior of the `BrowserAnimationsModule`.
-   * @see {@link BrowserAnimationsModuleConfig}
-   *
-   * @usageNotes
-   * When registering the `BrowserAnimationsModule`, you can use the `withConfig`
-   * function as follows:
-   * ```
-   * @NgModule({
-   *   imports: [BrowserAnimationsModule.withConfig(config)]
-   * })
-   * class MyNgModule {}
-   * ```
-   */
-  static withConfig(config) {
-    return {
-      ngModule: _BrowserAnimationsModule,
-      providers: config.disableAnimations ? BROWSER_NOOP_ANIMATIONS_PROVIDERS : BROWSER_ANIMATIONS_PROVIDERS
-    };
-  }
-  static {
-    this.ɵfac = function BrowserAnimationsModule_Factory(t) {
-      return new (t || _BrowserAnimationsModule)();
-    };
-  }
-  static {
-    this.ɵmod = ɵɵdefineNgModule({
-      type: _BrowserAnimationsModule,
-      exports: [BrowserModule]
-    });
-  }
-  static {
-    this.ɵinj = ɵɵdefineInjector({
-      providers: BROWSER_ANIMATIONS_PROVIDERS,
-      imports: [BrowserModule]
-    });
-  }
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(BrowserAnimationsModule, [{
-    type: NgModule,
-    args: [{
-      exports: [BrowserModule],
-      providers: BROWSER_ANIMATIONS_PROVIDERS
-    }]
-  }], null, null);
-})();
-var NoopAnimationsModule = class _NoopAnimationsModule {
-  static {
-    this.ɵfac = function NoopAnimationsModule_Factory(t) {
-      return new (t || _NoopAnimationsModule)();
-    };
-  }
-  static {
-    this.ɵmod = ɵɵdefineNgModule({
-      type: _NoopAnimationsModule,
-      exports: [BrowserModule]
-    });
-  }
-  static {
-    this.ɵinj = ɵɵdefineInjector({
-      providers: BROWSER_NOOP_ANIMATIONS_PROVIDERS,
-      imports: [BrowserModule]
-    });
-  }
-};
-(() => {
-  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(NoopAnimationsModule, [{
-    type: NgModule,
-    args: [{
-      exports: [BrowserModule],
-      providers: BROWSER_NOOP_ANIMATIONS_PROVIDERS
+      imports: [Dir],
+      exports: [Dir]
     }]
   }], null, null);
 })();
 
 // node_modules/@angular/cdk/fesm2022/cdk.mjs
-var VERSION = new Version("17.0.0");
+var VERSION = new Version("17.3.10");
 
 // node_modules/@angular/material/fesm2022/core.mjs
 var _c0 = ["*", [["mat-option"], ["ng-container"]]];
@@ -3247,7 +3152,9 @@ function MatOption_Conditional_6_Template(rf, ctx) {
     ɵɵtextInterpolate1("(", ctx_r0.group.label, ")");
   }
 }
-var VERSION2 = new Version("17.0.0");
+var _c5 = ["mat-internal-form-field", ""];
+var _c6 = ["*"];
+var VERSION2 = new Version("17.3.10");
 var AnimationCurves = class {
   static {
     this.STANDARD_CURVE = "cubic-bezier(0.4,0.0,0.2,1)";
@@ -3380,94 +3287,28 @@ function _checkCdkVersionMatch() {
     console.warn("The Angular Material version (" + VERSION2.full + ") does not match the Angular CDK version (" + VERSION.full + ").\nPlease ensure the versions of these two packages exactly match.");
   }
 }
-function mixinDisabled(base) {
-  return class extends base {
-    get disabled() {
-      return this._disabled;
+var _ErrorStateTracker = class {
+  constructor(_defaultMatcher, ngControl, _parentFormGroup, _parentForm, _stateChanges) {
+    this._defaultMatcher = _defaultMatcher;
+    this.ngControl = ngControl;
+    this._parentFormGroup = _parentFormGroup;
+    this._parentForm = _parentForm;
+    this._stateChanges = _stateChanges;
+    this.errorState = false;
+  }
+  /** Updates the error state based on the provided error state matcher. */
+  updateErrorState() {
+    const oldState = this.errorState;
+    const parent = this._parentFormGroup || this._parentForm;
+    const matcher = this.matcher || this._defaultMatcher;
+    const control = this.ngControl ? this.ngControl.control : null;
+    const newState = matcher?.isErrorState(control, parent) ?? false;
+    if (newState !== oldState) {
+      this.errorState = newState;
+      this._stateChanges.next();
     }
-    set disabled(value) {
-      this._disabled = coerceBooleanProperty(value);
-    }
-    constructor(...args) {
-      super(...args);
-      this._disabled = false;
-    }
-  };
-}
-function mixinColor(base, defaultColor) {
-  return class extends base {
-    get color() {
-      return this._color;
-    }
-    set color(value) {
-      const colorPalette = value || this.defaultColor;
-      if (colorPalette !== this._color) {
-        if (this._color) {
-          this._elementRef.nativeElement.classList.remove(`mat-${this._color}`);
-        }
-        if (colorPalette) {
-          this._elementRef.nativeElement.classList.add(`mat-${colorPalette}`);
-        }
-        this._color = colorPalette;
-      }
-    }
-    constructor(...args) {
-      super(...args);
-      this.defaultColor = defaultColor;
-      this.color = defaultColor;
-    }
-  };
-}
-function mixinDisableRipple(base) {
-  return class extends base {
-    /** Whether the ripple effect is disabled or not. */
-    get disableRipple() {
-      return this._disableRipple;
-    }
-    set disableRipple(value) {
-      this._disableRipple = coerceBooleanProperty(value);
-    }
-    constructor(...args) {
-      super(...args);
-      this._disableRipple = false;
-    }
-  };
-}
-function mixinTabIndex(base, defaultTabIndex = 0) {
-  return class extends base {
-    get tabIndex() {
-      return this.disabled ? -1 : this._tabIndex;
-    }
-    set tabIndex(value) {
-      this._tabIndex = value != null ? coerceNumberProperty(value) : this.defaultTabIndex;
-    }
-    constructor(...args) {
-      super(...args);
-      this._tabIndex = defaultTabIndex;
-      this.defaultTabIndex = defaultTabIndex;
-    }
-  };
-}
-function mixinErrorState(base) {
-  return class extends base {
-    /** Updates the error state based on the provided error state matcher. */
-    updateErrorState() {
-      const oldState = this.errorState;
-      const parent = this._parentFormGroup || this._parentForm;
-      const matcher = this.errorStateMatcher || this._defaultErrorStateMatcher;
-      const control = this.ngControl ? this.ngControl.control : null;
-      const newState = matcher.isErrorState(control, parent);
-      if (newState !== oldState) {
-        this.errorState = newState;
-        this.stateChanges.next();
-      }
-    }
-    constructor(...args) {
-      super(...args);
-      this.errorState = false;
-    }
-  };
-}
+  }
+};
 var MAT_DATE_LOCALE = new InjectionToken("MAT_DATE_LOCALE", {
   providedIn: "root",
   factory: MAT_DATE_LOCALE_FACTORY
@@ -3829,17 +3670,12 @@ var MatNativeDateModule = class _MatNativeDateModule {
   }
   static {
     this.ɵmod = ɵɵdefineNgModule({
-      type: _MatNativeDateModule,
-      imports: [NativeDateModule]
+      type: _MatNativeDateModule
     });
   }
   static {
     this.ɵinj = ɵɵdefineInjector({
-      providers: [{
-        provide: MAT_DATE_FORMATS,
-        useValue: MAT_NATIVE_DATE_FORMATS
-      }],
-      imports: [NativeDateModule]
+      providers: [provideNativeDateAdapter()]
     });
   }
 };
@@ -3847,14 +3683,19 @@ var MatNativeDateModule = class _MatNativeDateModule {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(MatNativeDateModule, [{
     type: NgModule,
     args: [{
-      imports: [NativeDateModule],
-      providers: [{
-        provide: MAT_DATE_FORMATS,
-        useValue: MAT_NATIVE_DATE_FORMATS
-      }]
+      providers: [provideNativeDateAdapter()]
     }]
   }], null, null);
 })();
+function provideNativeDateAdapter(formats = MAT_NATIVE_DATE_FORMATS) {
+  return [{
+    provide: DateAdapter,
+    useClass: NativeDateAdapter
+  }, {
+    provide: MAT_DATE_FORMATS,
+    useValue: formats
+  }];
+}
 var ShowOnDirtyErrorStateMatcher = class _ShowOnDirtyErrorStateMatcher {
   isErrorState(control, form) {
     return !!(control && control.invalid && (control.dirty || form && form.submitted));
@@ -3911,7 +3752,8 @@ var MatLine = class _MatLine {
     this.ɵdir = ɵɵdefineDirective({
       type: _MatLine,
       selectors: [["", "mat-line", ""], ["", "matLine", ""]],
-      hostAttrs: [1, "mat-line"]
+      hostAttrs: [1, "mat-line"],
+      standalone: true
     });
   }
 };
@@ -3922,7 +3764,8 @@ var MatLine = class _MatLine {
       selector: "[mat-line], [matLine]",
       host: {
         "class": "mat-line"
-      }
+      },
+      standalone: true
     }]
   }], null, null);
 })();
@@ -3935,8 +3778,7 @@ var MatLineModule = class _MatLineModule {
   static {
     this.ɵmod = ɵɵdefineNgModule({
       type: _MatLineModule,
-      declarations: [MatLine],
-      imports: [MatCommonModule],
+      imports: [MatCommonModule, MatLine],
       exports: [MatLine, MatCommonModule]
     });
   }
@@ -3950,19 +3792,25 @@ var MatLineModule = class _MatLineModule {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(MatLineModule, [{
     type: NgModule,
     args: [{
-      imports: [MatCommonModule],
-      exports: [MatLine, MatCommonModule],
-      declarations: [MatLine]
+      imports: [MatCommonModule, MatLine],
+      exports: [MatLine, MatCommonModule]
     }]
   }], null, null);
 })();
+var RippleState;
+(function(RippleState2) {
+  RippleState2[RippleState2["FADING_IN"] = 0] = "FADING_IN";
+  RippleState2[RippleState2["VISIBLE"] = 1] = "VISIBLE";
+  RippleState2[RippleState2["FADING_OUT"] = 2] = "FADING_OUT";
+  RippleState2[RippleState2["HIDDEN"] = 3] = "HIDDEN";
+})(RippleState || (RippleState = {}));
 var RippleRef = class {
   constructor(_renderer, element, config, _animationForciblyDisabledThroughCss = false) {
     this._renderer = _renderer;
     this.element = element;
     this.config = config;
     this._animationForciblyDisabledThroughCss = _animationForciblyDisabledThroughCss;
-    this.state = 3;
+    this.state = RippleState.HIDDEN;
   }
   /** Fades out the ripple element. */
   fadeOut() {
@@ -4087,7 +3935,7 @@ var RippleRenderer = class _RippleRenderer {
     containerRect.width === 0 && containerRect.height === 0;
     const rippleRef = new RippleRef(this, ripple, config, animationForciblyDisabledThroughCss);
     ripple.style.transform = "scale3d(1, 1, 1)";
-    rippleRef.state = 0;
+    rippleRef.state = RippleState.FADING_IN;
     if (!config.persistent) {
       this._mostRecentTransientRipple = rippleRef;
     }
@@ -4112,14 +3960,14 @@ var RippleRenderer = class _RippleRenderer {
   }
   /** Fades out a ripple reference. */
   fadeOutRipple(rippleRef) {
-    if (rippleRef.state === 2 || rippleRef.state === 3) {
+    if (rippleRef.state === RippleState.FADING_OUT || rippleRef.state === RippleState.HIDDEN) {
       return;
     }
     const rippleEl = rippleRef.element;
     const animationConfig = __spreadValues(__spreadValues({}, defaultRippleAnimationConfig), rippleRef.config.animation);
     rippleEl.style.transitionDuration = `${animationConfig.exitDuration}ms`;
     rippleEl.style.opacity = "0";
-    rippleRef.state = 2;
+    rippleRef.state = RippleState.FADING_OUT;
     if (rippleRef._animationForciblyDisabledThroughCss || !animationConfig.exitDuration) {
       this._finishRippleTransition(rippleRef);
     }
@@ -4171,9 +4019,9 @@ var RippleRenderer = class _RippleRenderer {
   }
   /** Method that will be called if the fade-in or fade-in transition completed. */
   _finishRippleTransition(rippleRef) {
-    if (rippleRef.state === 0) {
+    if (rippleRef.state === RippleState.FADING_IN) {
       this._startFadeOutTransition(rippleRef);
-    } else if (rippleRef.state === 2) {
+    } else if (rippleRef.state === RippleState.FADING_OUT) {
       this._destroyRipple(rippleRef);
     }
   }
@@ -4186,7 +4034,7 @@ var RippleRenderer = class _RippleRenderer {
     const {
       persistent
     } = rippleRef.config;
-    rippleRef.state = 1;
+    rippleRef.state = RippleState.VISIBLE;
     if (!persistent && (!isMostRecentTransientRipple || !this._isPointerDown)) {
       rippleRef.fadeOut();
     }
@@ -4201,7 +4049,7 @@ var RippleRenderer = class _RippleRenderer {
     if (rippleRef === this._mostRecentTransientRipple) {
       this._mostRecentTransientRipple = null;
     }
-    rippleRef.state = 3;
+    rippleRef.state = RippleState.HIDDEN;
     if (eventListeners !== null) {
       rippleRef.element.removeEventListener("transitionend", eventListeners.onTransitionEnd);
       rippleRef.element.removeEventListener("transitioncancel", eventListeners.onTransitionCancel);
@@ -4237,7 +4085,7 @@ var RippleRenderer = class _RippleRenderer {
     }
     this._isPointerDown = false;
     this._getActiveRipples().forEach((ripple) => {
-      const isVisible = ripple.state === 1 || ripple.config.terminateOnPointerUp && ripple.state === 0;
+      const isVisible = ripple.state === RippleState.VISIBLE || ripple.config.terminateOnPointerUp && ripple.state === RippleState.FADING_IN;
       if (!ripple.config.persistent && isVisible) {
         ripple.fadeOut();
       }
@@ -4253,6 +4101,7 @@ var RippleRenderer = class _RippleRenderer {
       pointerDownEvents.forEach((type) => _RippleRenderer._eventManager.removeHandler(type, trigger, this));
       if (this._pointerUpEventsRegistered) {
         pointerUpEvents.forEach((type) => trigger.removeEventListener(type, this, passiveCapturingEventOptions));
+        this._pointerUpEventsRegistered = false;
       }
     }
   }
@@ -4375,7 +4224,8 @@ var MatRipple = class _MatRipple {
         disabled: [InputFlags.None, "matRippleDisabled", "disabled"],
         trigger: [InputFlags.None, "matRippleTrigger", "trigger"]
       },
-      exportAs: ["matRipple"]
+      exportAs: ["matRipple"],
+      standalone: true
     });
   }
 };
@@ -4388,7 +4238,8 @@ var MatRipple = class _MatRipple {
       host: {
         "class": "mat-ripple",
         "[class.mat-ripple-unbounded]": "unbounded"
-      }
+      },
+      standalone: true
     }]
   }], () => [{
     type: ElementRef
@@ -4452,8 +4303,7 @@ var MatRippleModule = class _MatRippleModule {
   static {
     this.ɵmod = ɵɵdefineNgModule({
       type: _MatRippleModule,
-      declarations: [MatRipple],
-      imports: [MatCommonModule],
+      imports: [MatCommonModule, MatRipple],
       exports: [MatRipple, MatCommonModule]
     });
   }
@@ -4467,9 +4317,8 @@ var MatRippleModule = class _MatRippleModule {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(MatRippleModule, [{
     type: NgModule,
     args: [{
-      imports: [MatCommonModule],
-      exports: [MatRipple, MatCommonModule],
-      declarations: [MatRipple]
+      imports: [MatCommonModule, MatRipple],
+      exports: [MatRipple, MatCommonModule]
     }]
   }], null, null);
 })();
@@ -4501,11 +4350,13 @@ var MatPseudoCheckbox = class _MatPseudoCheckbox {
         disabled: "disabled",
         appearance: "appearance"
       },
+      standalone: true,
+      features: [ɵɵStandaloneFeature],
       decls: 0,
       vars: 0,
       template: function MatPseudoCheckbox_Template(rf, ctx) {
       },
-      styles: ['.mat-pseudo-checkbox{border-radius:2px;cursor:pointer;display:inline-block;vertical-align:middle;box-sizing:border-box;position:relative;flex-shrink:0;transition:border-color 90ms cubic-bezier(0, 0, 0.2, 0.1),background-color 90ms cubic-bezier(0, 0, 0.2, 0.1)}.mat-pseudo-checkbox::after{position:absolute;opacity:0;content:"";border-bottom:2px solid currentColor;transition:opacity 90ms cubic-bezier(0, 0, 0.2, 0.1)}.mat-pseudo-checkbox._mat-animation-noopable{transition:none !important;animation:none !important}.mat-pseudo-checkbox._mat-animation-noopable::after{transition:none}.mat-pseudo-checkbox-disabled{cursor:default}.mat-pseudo-checkbox-indeterminate::after{left:1px;opacity:1;border-radius:2px}.mat-pseudo-checkbox-checked::after{left:1px;border-left:2px solid currentColor;transform:rotate(-45deg);opacity:1;box-sizing:content-box}.mat-pseudo-checkbox-full{border:2px solid}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate{border-color:rgba(0,0,0,0)}.mat-pseudo-checkbox{width:18px;height:18px}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked::after{width:14px;height:6px;transform-origin:center;top:-4.2426406871px;left:0;bottom:0;right:0;margin:auto}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-indeterminate::after{top:8px;width:16px}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked::after{width:10px;height:4px;transform-origin:center;top:-2.8284271247px;left:0;bottom:0;right:0;margin:auto}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate::after{top:6px;width:12px}'],
+      styles: ['.mat-pseudo-checkbox{border-radius:2px;cursor:pointer;display:inline-block;vertical-align:middle;box-sizing:border-box;position:relative;flex-shrink:0;transition:border-color 90ms cubic-bezier(0, 0, 0.2, 0.1),background-color 90ms cubic-bezier(0, 0, 0.2, 0.1)}.mat-pseudo-checkbox::after{position:absolute;opacity:0;content:"";border-bottom:2px solid currentColor;transition:opacity 90ms cubic-bezier(0, 0, 0.2, 0.1)}.mat-pseudo-checkbox._mat-animation-noopable{transition:none !important;animation:none !important}.mat-pseudo-checkbox._mat-animation-noopable::after{transition:none}.mat-pseudo-checkbox-disabled{cursor:default}.mat-pseudo-checkbox-indeterminate::after{left:1px;opacity:1;border-radius:2px}.mat-pseudo-checkbox-checked::after{left:1px;border-left:2px solid currentColor;transform:rotate(-45deg);opacity:1;box-sizing:content-box}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked::after,.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-indeterminate::after{color:var(--mat-minimal-pseudo-checkbox-selected-checkmark-color)}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-disabled::after,.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-disabled::after{color:var(--mat-minimal-pseudo-checkbox-disabled-selected-checkmark-color)}.mat-pseudo-checkbox-full{border-color:var(--mat-full-pseudo-checkbox-unselected-icon-color);border-width:2px;border-style:solid}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-disabled{border-color:var(--mat-full-pseudo-checkbox-disabled-unselected-icon-color)}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate{background-color:var(--mat-full-pseudo-checkbox-selected-icon-color);border-color:rgba(0,0,0,0)}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked::after,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate::after{color:var(--mat-full-pseudo-checkbox-selected-checkmark-color)}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-disabled,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-disabled{background-color:var(--mat-full-pseudo-checkbox-disabled-selected-icon-color)}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-disabled::after,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-disabled::after{color:var(--mat-full-pseudo-checkbox-disabled-selected-checkmark-color)}.mat-pseudo-checkbox{width:18px;height:18px}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked::after{width:14px;height:6px;transform-origin:center;top:-4.2426406871px;left:0;bottom:0;right:0;margin:auto}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-indeterminate::after{top:8px;width:16px}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked::after{width:10px;height:4px;transform-origin:center;top:-2.8284271247px;left:0;bottom:0;right:0;margin:auto}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate::after{top:6px;width:12px}'],
       encapsulation: 2,
       changeDetection: 0
     });
@@ -4528,7 +4379,8 @@ var MatPseudoCheckbox = class _MatPseudoCheckbox {
         "[class.mat-pseudo-checkbox-full]": 'appearance === "full"',
         "[class._mat-animation-noopable]": '_animationMode === "NoopAnimations"'
       },
-      styles: ['.mat-pseudo-checkbox{border-radius:2px;cursor:pointer;display:inline-block;vertical-align:middle;box-sizing:border-box;position:relative;flex-shrink:0;transition:border-color 90ms cubic-bezier(0, 0, 0.2, 0.1),background-color 90ms cubic-bezier(0, 0, 0.2, 0.1)}.mat-pseudo-checkbox::after{position:absolute;opacity:0;content:"";border-bottom:2px solid currentColor;transition:opacity 90ms cubic-bezier(0, 0, 0.2, 0.1)}.mat-pseudo-checkbox._mat-animation-noopable{transition:none !important;animation:none !important}.mat-pseudo-checkbox._mat-animation-noopable::after{transition:none}.mat-pseudo-checkbox-disabled{cursor:default}.mat-pseudo-checkbox-indeterminate::after{left:1px;opacity:1;border-radius:2px}.mat-pseudo-checkbox-checked::after{left:1px;border-left:2px solid currentColor;transform:rotate(-45deg);opacity:1;box-sizing:content-box}.mat-pseudo-checkbox-full{border:2px solid}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate{border-color:rgba(0,0,0,0)}.mat-pseudo-checkbox{width:18px;height:18px}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked::after{width:14px;height:6px;transform-origin:center;top:-4.2426406871px;left:0;bottom:0;right:0;margin:auto}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-indeterminate::after{top:8px;width:16px}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked::after{width:10px;height:4px;transform-origin:center;top:-2.8284271247px;left:0;bottom:0;right:0;margin:auto}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate::after{top:6px;width:12px}']
+      standalone: true,
+      styles: ['.mat-pseudo-checkbox{border-radius:2px;cursor:pointer;display:inline-block;vertical-align:middle;box-sizing:border-box;position:relative;flex-shrink:0;transition:border-color 90ms cubic-bezier(0, 0, 0.2, 0.1),background-color 90ms cubic-bezier(0, 0, 0.2, 0.1)}.mat-pseudo-checkbox::after{position:absolute;opacity:0;content:"";border-bottom:2px solid currentColor;transition:opacity 90ms cubic-bezier(0, 0, 0.2, 0.1)}.mat-pseudo-checkbox._mat-animation-noopable{transition:none !important;animation:none !important}.mat-pseudo-checkbox._mat-animation-noopable::after{transition:none}.mat-pseudo-checkbox-disabled{cursor:default}.mat-pseudo-checkbox-indeterminate::after{left:1px;opacity:1;border-radius:2px}.mat-pseudo-checkbox-checked::after{left:1px;border-left:2px solid currentColor;transform:rotate(-45deg);opacity:1;box-sizing:content-box}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked::after,.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-indeterminate::after{color:var(--mat-minimal-pseudo-checkbox-selected-checkmark-color)}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-disabled::after,.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-disabled::after{color:var(--mat-minimal-pseudo-checkbox-disabled-selected-checkmark-color)}.mat-pseudo-checkbox-full{border-color:var(--mat-full-pseudo-checkbox-unselected-icon-color);border-width:2px;border-style:solid}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-disabled{border-color:var(--mat-full-pseudo-checkbox-disabled-unselected-icon-color)}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate{background-color:var(--mat-full-pseudo-checkbox-selected-icon-color);border-color:rgba(0,0,0,0)}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked::after,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate::after{color:var(--mat-full-pseudo-checkbox-selected-checkmark-color)}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-disabled,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-disabled{background-color:var(--mat-full-pseudo-checkbox-disabled-selected-icon-color)}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked.mat-pseudo-checkbox-disabled::after,.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate.mat-pseudo-checkbox-disabled::after{color:var(--mat-full-pseudo-checkbox-disabled-selected-checkmark-color)}.mat-pseudo-checkbox{width:18px;height:18px}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-checked::after{width:14px;height:6px;transform-origin:center;top:-4.2426406871px;left:0;bottom:0;right:0;margin:auto}.mat-pseudo-checkbox-minimal.mat-pseudo-checkbox-indeterminate::after{top:8px;width:16px}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-checked::after{width:10px;height:4px;transform-origin:center;top:-2.8284271247px;left:0;bottom:0;right:0;margin:auto}.mat-pseudo-checkbox-full.mat-pseudo-checkbox-indeterminate::after{top:6px;width:12px}']
     }]
   }], () => [{
     type: void 0,
@@ -4559,8 +4411,7 @@ var MatPseudoCheckboxModule = class _MatPseudoCheckboxModule {
   static {
     this.ɵmod = ɵɵdefineNgModule({
       type: _MatPseudoCheckboxModule,
-      declarations: [MatPseudoCheckbox],
-      imports: [MatCommonModule],
+      imports: [MatCommonModule, MatPseudoCheckbox],
       exports: [MatPseudoCheckbox]
     });
   }
@@ -4574,9 +4425,8 @@ var MatPseudoCheckboxModule = class _MatPseudoCheckboxModule {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(MatPseudoCheckboxModule, [{
     type: NgModule,
     args: [{
-      imports: [MatCommonModule],
-      exports: [MatPseudoCheckbox],
-      declarations: [MatPseudoCheckbox]
+      imports: [MatCommonModule, MatPseudoCheckbox],
+      exports: [MatPseudoCheckbox]
     }]
   }], null, null);
 })();
@@ -4610,10 +4460,11 @@ var MatOptgroup = class _MatOptgroup {
         disabled: [InputFlags.HasDecoratorInputTransform, "disabled", "disabled", booleanAttribute]
       },
       exportAs: ["matOptgroup"],
+      standalone: true,
       features: [ɵɵProvidersFeature([{
         provide: MAT_OPTGROUP,
         useExisting: _MatOptgroup
-      }]), ɵɵInputTransformsFeature],
+      }]), ɵɵInputTransformsFeature, ɵɵStandaloneFeature],
       ngContentSelectors: _c1,
       decls: 5,
       vars: 4,
@@ -4658,6 +4509,7 @@ var MatOptgroup = class _MatOptgroup {
         provide: MAT_OPTGROUP,
         useExisting: MatOptgroup
       }],
+      standalone: true,
       template: '<span\n  class="mat-mdc-optgroup-label"\n  role="presentation"\n  [class.mdc-list-item--disabled]="disabled"\n  [id]="_labelId">\n  <span class="mdc-list-item__primary-text">{{ label }} <ng-content></ng-content></span>\n</span>\n\n<ng-content select="mat-option, ng-container"></ng-content>\n',
       styles: [".mat-mdc-optgroup{color:var(--mat-optgroup-label-text-color);font-family:var(--mat-optgroup-label-text-font);line-height:var(--mat-optgroup-label-text-line-height);font-size:var(--mat-optgroup-label-text-size);letter-spacing:var(--mat-optgroup-label-text-tracking);font-weight:var(--mat-optgroup-label-text-weight)}.mat-mdc-optgroup-label{display:flex;position:relative;align-items:center;justify-content:flex-start;overflow:hidden;padding:0;padding-left:16px;padding-right:16px;min-height:48px}.mat-mdc-optgroup-label:focus{outline:none}[dir=rtl] .mat-mdc-optgroup-label,.mat-mdc-optgroup-label[dir=rtl]{padding-left:16px;padding-right:16px}.mat-mdc-optgroup-label.mdc-list-item--disabled{opacity:.38}.mat-mdc-optgroup-label .mdc-list-item__primary-text{font-size:inherit;font-weight:inherit;letter-spacing:inherit;line-height:inherit;font-family:inherit;text-decoration:inherit;text-transform:inherit;white-space:normal}"]
     }]
@@ -4884,7 +4736,8 @@ var MatOption = class _MatOption {
         onSelectionChange: "onSelectionChange"
       },
       exportAs: ["matOption"],
-      features: [ɵɵInputTransformsFeature],
+      standalone: true,
+      features: [ɵɵInputTransformsFeature, ɵɵStandaloneFeature],
       ngContentSelectors: _c4,
       decls: 8,
       vars: 5,
@@ -4910,8 +4763,8 @@ var MatOption = class _MatOption {
           ɵɵproperty("matRippleTrigger", ctx._getHostElement())("matRippleDisabled", ctx.disabled || ctx.disableRipple);
         }
       },
-      dependencies: [MatRipple, MatPseudoCheckbox],
-      styles: ['.mat-mdc-option{display:flex;position:relative;align-items:center;justify-content:flex-start;overflow:hidden;padding:0;padding-left:16px;padding-right:16px;-webkit-user-select:none;user-select:none;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);color:var(--mat-option-label-text-color);font-family:var(--mat-option-label-text-font);line-height:var(--mat-option-label-text-line-height);font-size:var(--mat-option-label-text-size);letter-spacing:var(--mat-option-label-text-tracking);font-weight:var(--mat-option-label-text-weight);min-height:48px}.mat-mdc-option:focus{outline:none}[dir=rtl] .mat-mdc-option,.mat-mdc-option[dir=rtl]{padding-left:16px;padding-right:16px}.mat-mdc-option:hover:not(.mdc-list-item--disabled){background-color:var(--mat-option-hover-state-layer-color)}.mat-mdc-option:focus.mdc-list-item,.mat-mdc-option.mat-mdc-option-active.mdc-list-item{background-color:var(--mat-option-focus-state-layer-color)}.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) .mdc-list-item__primary-text{color:var(--mat-option-selected-state-label-text-color)}.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled):not(.mat-mdc-option-multiple){background-color:var(--mat-option-selected-state-layer-color)}.mat-mdc-option.mdc-list-item{align-items:center}.mat-mdc-option.mdc-list-item--disabled{cursor:default;pointer-events:none}.mat-mdc-option.mdc-list-item--disabled .mat-mdc-option-pseudo-checkbox,.mat-mdc-option.mdc-list-item--disabled .mdc-list-item__primary-text,.mat-mdc-option.mdc-list-item--disabled>mat-icon{opacity:.38}.mat-mdc-optgroup .mat-mdc-option:not(.mat-mdc-option-multiple){padding-left:32px}[dir=rtl] .mat-mdc-optgroup .mat-mdc-option:not(.mat-mdc-option-multiple){padding-left:16px;padding-right:32px}.mat-mdc-option .mat-icon,.mat-mdc-option .mat-pseudo-checkbox-full{margin-right:16px;flex-shrink:0}[dir=rtl] .mat-mdc-option .mat-icon,[dir=rtl] .mat-mdc-option .mat-pseudo-checkbox-full{margin-right:0;margin-left:16px}.mat-mdc-option .mat-pseudo-checkbox-minimal{margin-left:16px;flex-shrink:0}[dir=rtl] .mat-mdc-option .mat-pseudo-checkbox-minimal{margin-right:16px;margin-left:0}.mat-mdc-option .mat-mdc-option-ripple{top:0;left:0;right:0;bottom:0;position:absolute;pointer-events:none}.mat-mdc-option .mdc-list-item__primary-text{white-space:normal;font-size:inherit;font-weight:inherit;letter-spacing:inherit;line-height:inherit;font-family:inherit;text-decoration:inherit;text-transform:inherit;margin-right:auto}[dir=rtl] .mat-mdc-option .mdc-list-item__primary-text{margin-right:0;margin-left:auto}.cdk-high-contrast-active .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple)::after{content:"";position:absolute;top:50%;right:16px;transform:translateY(-50%);width:10px;height:0;border-bottom:solid 10px;border-radius:10px}[dir=rtl] .cdk-high-contrast-active .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple)::after{right:auto;left:16px}.mat-mdc-option-active .mat-mdc-focus-indicator::before{content:""}'],
+      dependencies: [MatPseudoCheckbox, MatRipple],
+      styles: ['.mat-mdc-option{display:flex;position:relative;align-items:center;justify-content:flex-start;overflow:hidden;padding:0;padding-left:16px;padding-right:16px;-webkit-user-select:none;user-select:none;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);color:var(--mat-option-label-text-color);font-family:var(--mat-option-label-text-font);line-height:var(--mat-option-label-text-line-height);font-size:var(--mat-option-label-text-size);letter-spacing:var(--mat-option-label-text-tracking);font-weight:var(--mat-option-label-text-weight);min-height:48px}.mat-mdc-option:focus{outline:none}[dir=rtl] .mat-mdc-option,.mat-mdc-option[dir=rtl]{padding-left:16px;padding-right:16px}.mat-mdc-option:hover:not(.mdc-list-item--disabled){background-color:var(--mat-option-hover-state-layer-color)}.mat-mdc-option:focus.mdc-list-item,.mat-mdc-option.mat-mdc-option-active.mdc-list-item{background-color:var(--mat-option-focus-state-layer-color)}.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) .mdc-list-item__primary-text{color:var(--mat-option-selected-state-label-text-color)}.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled):not(.mat-mdc-option-multiple){background-color:var(--mat-option-selected-state-layer-color)}.mat-mdc-option.mdc-list-item{align-items:center;background:rgba(0,0,0,0)}.mat-mdc-option.mdc-list-item--disabled{cursor:default;pointer-events:none}.mat-mdc-option.mdc-list-item--disabled .mat-mdc-option-pseudo-checkbox,.mat-mdc-option.mdc-list-item--disabled .mdc-list-item__primary-text,.mat-mdc-option.mdc-list-item--disabled>mat-icon{opacity:.38}.mat-mdc-optgroup .mat-mdc-option:not(.mat-mdc-option-multiple){padding-left:32px}[dir=rtl] .mat-mdc-optgroup .mat-mdc-option:not(.mat-mdc-option-multiple){padding-left:16px;padding-right:32px}.mat-mdc-option .mat-icon,.mat-mdc-option .mat-pseudo-checkbox-full{margin-right:16px;flex-shrink:0}[dir=rtl] .mat-mdc-option .mat-icon,[dir=rtl] .mat-mdc-option .mat-pseudo-checkbox-full{margin-right:0;margin-left:16px}.mat-mdc-option .mat-pseudo-checkbox-minimal{margin-left:16px;flex-shrink:0}[dir=rtl] .mat-mdc-option .mat-pseudo-checkbox-minimal{margin-right:16px;margin-left:0}.mat-mdc-option .mat-mdc-option-ripple{top:0;left:0;right:0;bottom:0;position:absolute;pointer-events:none}.mat-mdc-option .mdc-list-item__primary-text{white-space:normal;font-size:inherit;font-weight:inherit;letter-spacing:inherit;line-height:inherit;font-family:inherit;text-decoration:inherit;text-transform:inherit;margin-right:auto}[dir=rtl] .mat-mdc-option .mdc-list-item__primary-text{margin-right:0;margin-left:auto}.cdk-high-contrast-active .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple)::after{content:"";position:absolute;top:50%;right:16px;transform:translateY(-50%);width:10px;height:0;border-bottom:solid 10px;border-radius:10px}[dir=rtl] .cdk-high-contrast-active .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple)::after{right:auto;left:16px}.mat-mdc-option-multiple{--mdc-list-list-item-selected-container-color:var(--mdc-list-list-item-container-color, transparent)}.mat-mdc-option-active .mat-mdc-focus-indicator::before{content:""}'],
       encapsulation: 2,
       changeDetection: 0
     });
@@ -4947,6 +4800,8 @@ var MatOption = class _MatOption {
       },
       encapsulation: ViewEncapsulation$1.None,
       changeDetection: ChangeDetectionStrategy.OnPush,
+      standalone: true,
+      imports: [MatPseudoCheckbox, MatRipple],
       template: `<!-- Set aria-hidden="true" to this DOM node and other decorative nodes in this file. This might
  be contributing to issue where sometimes VoiceOver focuses on a TextNode in the a11y tree instead
  of the Option node (#23202). Most assistive technology will generally ignore non-role,
@@ -4982,7 +4837,7 @@ var MatOption = class _MatOption {
      [matRippleTrigger]="_getHostElement()" [matRippleDisabled]="disabled || disableRipple">
 </div>
 `,
-      styles: ['.mat-mdc-option{display:flex;position:relative;align-items:center;justify-content:flex-start;overflow:hidden;padding:0;padding-left:16px;padding-right:16px;-webkit-user-select:none;user-select:none;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);color:var(--mat-option-label-text-color);font-family:var(--mat-option-label-text-font);line-height:var(--mat-option-label-text-line-height);font-size:var(--mat-option-label-text-size);letter-spacing:var(--mat-option-label-text-tracking);font-weight:var(--mat-option-label-text-weight);min-height:48px}.mat-mdc-option:focus{outline:none}[dir=rtl] .mat-mdc-option,.mat-mdc-option[dir=rtl]{padding-left:16px;padding-right:16px}.mat-mdc-option:hover:not(.mdc-list-item--disabled){background-color:var(--mat-option-hover-state-layer-color)}.mat-mdc-option:focus.mdc-list-item,.mat-mdc-option.mat-mdc-option-active.mdc-list-item{background-color:var(--mat-option-focus-state-layer-color)}.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) .mdc-list-item__primary-text{color:var(--mat-option-selected-state-label-text-color)}.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled):not(.mat-mdc-option-multiple){background-color:var(--mat-option-selected-state-layer-color)}.mat-mdc-option.mdc-list-item{align-items:center}.mat-mdc-option.mdc-list-item--disabled{cursor:default;pointer-events:none}.mat-mdc-option.mdc-list-item--disabled .mat-mdc-option-pseudo-checkbox,.mat-mdc-option.mdc-list-item--disabled .mdc-list-item__primary-text,.mat-mdc-option.mdc-list-item--disabled>mat-icon{opacity:.38}.mat-mdc-optgroup .mat-mdc-option:not(.mat-mdc-option-multiple){padding-left:32px}[dir=rtl] .mat-mdc-optgroup .mat-mdc-option:not(.mat-mdc-option-multiple){padding-left:16px;padding-right:32px}.mat-mdc-option .mat-icon,.mat-mdc-option .mat-pseudo-checkbox-full{margin-right:16px;flex-shrink:0}[dir=rtl] .mat-mdc-option .mat-icon,[dir=rtl] .mat-mdc-option .mat-pseudo-checkbox-full{margin-right:0;margin-left:16px}.mat-mdc-option .mat-pseudo-checkbox-minimal{margin-left:16px;flex-shrink:0}[dir=rtl] .mat-mdc-option .mat-pseudo-checkbox-minimal{margin-right:16px;margin-left:0}.mat-mdc-option .mat-mdc-option-ripple{top:0;left:0;right:0;bottom:0;position:absolute;pointer-events:none}.mat-mdc-option .mdc-list-item__primary-text{white-space:normal;font-size:inherit;font-weight:inherit;letter-spacing:inherit;line-height:inherit;font-family:inherit;text-decoration:inherit;text-transform:inherit;margin-right:auto}[dir=rtl] .mat-mdc-option .mdc-list-item__primary-text{margin-right:0;margin-left:auto}.cdk-high-contrast-active .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple)::after{content:"";position:absolute;top:50%;right:16px;transform:translateY(-50%);width:10px;height:0;border-bottom:solid 10px;border-radius:10px}[dir=rtl] .cdk-high-contrast-active .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple)::after{right:auto;left:16px}.mat-mdc-option-active .mat-mdc-focus-indicator::before{content:""}']
+      styles: ['.mat-mdc-option{display:flex;position:relative;align-items:center;justify-content:flex-start;overflow:hidden;padding:0;padding-left:16px;padding-right:16px;-webkit-user-select:none;user-select:none;-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased;cursor:pointer;-webkit-tap-highlight-color:rgba(0,0,0,0);color:var(--mat-option-label-text-color);font-family:var(--mat-option-label-text-font);line-height:var(--mat-option-label-text-line-height);font-size:var(--mat-option-label-text-size);letter-spacing:var(--mat-option-label-text-tracking);font-weight:var(--mat-option-label-text-weight);min-height:48px}.mat-mdc-option:focus{outline:none}[dir=rtl] .mat-mdc-option,.mat-mdc-option[dir=rtl]{padding-left:16px;padding-right:16px}.mat-mdc-option:hover:not(.mdc-list-item--disabled){background-color:var(--mat-option-hover-state-layer-color)}.mat-mdc-option:focus.mdc-list-item,.mat-mdc-option.mat-mdc-option-active.mdc-list-item{background-color:var(--mat-option-focus-state-layer-color)}.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) .mdc-list-item__primary-text{color:var(--mat-option-selected-state-label-text-color)}.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled):not(.mat-mdc-option-multiple){background-color:var(--mat-option-selected-state-layer-color)}.mat-mdc-option.mdc-list-item{align-items:center;background:rgba(0,0,0,0)}.mat-mdc-option.mdc-list-item--disabled{cursor:default;pointer-events:none}.mat-mdc-option.mdc-list-item--disabled .mat-mdc-option-pseudo-checkbox,.mat-mdc-option.mdc-list-item--disabled .mdc-list-item__primary-text,.mat-mdc-option.mdc-list-item--disabled>mat-icon{opacity:.38}.mat-mdc-optgroup .mat-mdc-option:not(.mat-mdc-option-multiple){padding-left:32px}[dir=rtl] .mat-mdc-optgroup .mat-mdc-option:not(.mat-mdc-option-multiple){padding-left:16px;padding-right:32px}.mat-mdc-option .mat-icon,.mat-mdc-option .mat-pseudo-checkbox-full{margin-right:16px;flex-shrink:0}[dir=rtl] .mat-mdc-option .mat-icon,[dir=rtl] .mat-mdc-option .mat-pseudo-checkbox-full{margin-right:0;margin-left:16px}.mat-mdc-option .mat-pseudo-checkbox-minimal{margin-left:16px;flex-shrink:0}[dir=rtl] .mat-mdc-option .mat-pseudo-checkbox-minimal{margin-right:16px;margin-left:0}.mat-mdc-option .mat-mdc-option-ripple{top:0;left:0;right:0;bottom:0;position:absolute;pointer-events:none}.mat-mdc-option .mdc-list-item__primary-text{white-space:normal;font-size:inherit;font-weight:inherit;letter-spacing:inherit;line-height:inherit;font-family:inherit;text-decoration:inherit;text-transform:inherit;margin-right:auto}[dir=rtl] .mat-mdc-option .mdc-list-item__primary-text{margin-right:0;margin-left:auto}.cdk-high-contrast-active .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple)::after{content:"";position:absolute;top:50%;right:16px;transform:translateY(-50%);width:10px;height:0;border-bottom:solid 10px;border-radius:10px}[dir=rtl] .cdk-high-contrast-active .mat-mdc-option.mdc-list-item--selected:not(.mat-mdc-option-multiple)::after{right:auto;left:16px}.mat-mdc-option-multiple{--mdc-list-list-item-selected-container-color:var(--mdc-list-list-item-container-color, transparent)}.mat-mdc-option-active .mat-mdc-focus-indicator::before{content:""}']
     }]
   }], () => [{
     type: ElementRef
@@ -5037,8 +4892,7 @@ var MatOptionModule = class _MatOptionModule {
   static {
     this.ɵmod = ɵɵdefineNgModule({
       type: _MatOptionModule,
-      declarations: [MatOption, MatOptgroup],
-      imports: [MatRippleModule, MatCommonModule, MatPseudoCheckboxModule],
+      imports: [MatRippleModule, MatCommonModule, MatPseudoCheckboxModule, MatOption, MatOptgroup],
       exports: [MatOption, MatOptgroup]
     });
   }
@@ -5052,9 +4906,8 @@ var MatOptionModule = class _MatOptionModule {
   (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(MatOptionModule, [{
     type: NgModule,
     args: [{
-      imports: [MatRippleModule, MatCommonModule, MatPseudoCheckboxModule],
-      exports: [MatOption, MatOptgroup],
-      declarations: [MatOption, MatOptgroup]
+      imports: [MatRippleModule, MatCommonModule, MatPseudoCheckboxModule, MatOption, MatOptgroup],
+      exports: [MatOption, MatOptgroup]
     }]
   }], null, null);
 })();
@@ -5079,6 +4932,7 @@ var MatRippleLoader = class _MatRippleLoader {
     });
     this._platform = inject(Platform);
     this._ngZone = inject(NgZone);
+    this._hosts = /* @__PURE__ */ new Map();
     this._onInteraction = (event) => {
       if (!(event.target instanceof HTMLElement)) {
         return;
@@ -5086,7 +4940,7 @@ var MatRippleLoader = class _MatRippleLoader {
       const eventTarget = event.target;
       const element = eventTarget.closest(`[${matRippleUninitialized}]`);
       if (element) {
-        this.createRipple(element);
+        this._createRipple(element);
       }
     };
     this._ngZone.runOutsideAngular(() => {
@@ -5096,6 +4950,10 @@ var MatRippleLoader = class _MatRippleLoader {
     });
   }
   ngOnDestroy() {
+    const hosts = this._hosts.keys();
+    for (const host of hosts) {
+      this.destroyRipple(host);
+    }
     for (const event of rippleInteractionEvents) {
       this._document?.removeEventListener(event, this._onInteraction, eventListenerOptions);
     }
@@ -5120,14 +4978,12 @@ var MatRippleLoader = class _MatRippleLoader {
   }
   /** Returns the ripple instance for the given host element. */
   getRipple(host) {
-    if (host.matRipple) {
-      return host.matRipple;
-    }
-    return this.createRipple(host);
+    const ripple = this._hosts.get(host);
+    return ripple || this._createRipple(host);
   }
   /** Sets the disabled state on the ripple instance corresponding to the given host element. */
   setDisabled(host, disabled) {
-    const ripple = host.matRipple;
+    const ripple = this._hosts.get(host);
     if (ripple) {
       ripple.disabled = disabled;
       return;
@@ -5139,9 +4995,13 @@ var MatRippleLoader = class _MatRippleLoader {
     }
   }
   /** Creates a MatRipple and appends it to the given element. */
-  createRipple(host) {
+  _createRipple(host) {
     if (!this._document) {
       return;
+    }
+    const existingRipple = this._hosts.get(host);
+    if (existingRipple) {
+      return existingRipple;
     }
     host.querySelector(".mat-ripple")?.remove();
     const rippleEl = this._document.createElement("span");
@@ -5157,7 +5017,14 @@ var MatRippleLoader = class _MatRippleLoader {
   }
   attachRipple(host, ripple) {
     host.removeAttribute(matRippleUninitialized);
-    host.matRipple = ripple;
+    this._hosts.set(host, ripple);
+  }
+  destroyRipple(host) {
+    const ripple = this._hosts.get(host);
+    if (ripple) {
+      ripple.ngOnDestroy();
+      this._hosts.delete(host);
+    }
   }
   static {
     this.ɵfac = function MatRippleLoader_Factory(t) {
@@ -5180,9 +5047,72 @@ var MatRippleLoader = class _MatRippleLoader {
     }]
   }], () => [], null);
 })();
+var _MatInternalFormField = class __MatInternalFormField {
+  static {
+    this.ɵfac = function _MatInternalFormField_Factory(t) {
+      return new (t || __MatInternalFormField)();
+    };
+  }
+  static {
+    this.ɵcmp = ɵɵdefineComponent({
+      type: __MatInternalFormField,
+      selectors: [["div", "mat-internal-form-field", ""]],
+      hostAttrs: [1, "mdc-form-field", "mat-internal-form-field"],
+      hostVars: 2,
+      hostBindings: function _MatInternalFormField_HostBindings(rf, ctx) {
+        if (rf & 2) {
+          ɵɵclassProp("mdc-form-field--align-end", ctx.labelPosition === "before");
+        }
+      },
+      inputs: {
+        labelPosition: "labelPosition"
+      },
+      standalone: true,
+      features: [ɵɵStandaloneFeature],
+      attrs: _c5,
+      ngContentSelectors: _c6,
+      decls: 1,
+      vars: 0,
+      template: function _MatInternalFormField_Template(rf, ctx) {
+        if (rf & 1) {
+          ɵɵprojectionDef();
+          ɵɵprojection(0);
+        }
+      },
+      styles: [".mdc-form-field{display:inline-flex;align-items:center;vertical-align:middle}.mdc-form-field[hidden]{display:none}.mdc-form-field>label{margin-left:0;margin-right:auto;padding-left:4px;padding-right:0;order:0}[dir=rtl] .mdc-form-field>label,.mdc-form-field>label[dir=rtl]{margin-left:auto;margin-right:0}[dir=rtl] .mdc-form-field>label,.mdc-form-field>label[dir=rtl]{padding-left:0;padding-right:4px}.mdc-form-field--nowrap>label{text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.mdc-form-field--align-end>label{margin-left:auto;margin-right:0;padding-left:0;padding-right:4px;order:-1}[dir=rtl] .mdc-form-field--align-end>label,.mdc-form-field--align-end>label[dir=rtl]{margin-left:0;margin-right:auto}[dir=rtl] .mdc-form-field--align-end>label,.mdc-form-field--align-end>label[dir=rtl]{padding-left:4px;padding-right:0}.mdc-form-field--space-between{justify-content:space-between}.mdc-form-field--space-between>label{margin:0}[dir=rtl] .mdc-form-field--space-between>label,.mdc-form-field--space-between>label[dir=rtl]{margin:0}.mdc-form-field{font-family:var(--mdc-form-field-label-text-font);line-height:var(--mdc-form-field-label-text-line-height);font-size:var(--mdc-form-field-label-text-size);font-weight:var(--mdc-form-field-label-text-weight);letter-spacing:var(--mdc-form-field-label-text-tracking);color:var(--mdc-form-field-label-text-color)}.mat-internal-form-field{-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}"],
+      encapsulation: 2,
+      changeDetection: 0
+    });
+  }
+};
+(() => {
+  (typeof ngDevMode === "undefined" || ngDevMode) && setClassMetadata(_MatInternalFormField, [{
+    type: Component,
+    args: [{
+      selector: "div[mat-internal-form-field]",
+      standalone: true,
+      template: "<ng-content></ng-content>",
+      encapsulation: ViewEncapsulation$1.None,
+      changeDetection: ChangeDetectionStrategy.OnPush,
+      host: {
+        "class": "mdc-form-field mat-internal-form-field",
+        "[class.mdc-form-field--align-end]": 'labelPosition === "before"'
+      },
+      styles: [".mdc-form-field{display:inline-flex;align-items:center;vertical-align:middle}.mdc-form-field[hidden]{display:none}.mdc-form-field>label{margin-left:0;margin-right:auto;padding-left:4px;padding-right:0;order:0}[dir=rtl] .mdc-form-field>label,.mdc-form-field>label[dir=rtl]{margin-left:auto;margin-right:0}[dir=rtl] .mdc-form-field>label,.mdc-form-field>label[dir=rtl]{padding-left:0;padding-right:4px}.mdc-form-field--nowrap>label{text-overflow:ellipsis;overflow:hidden;white-space:nowrap}.mdc-form-field--align-end>label{margin-left:auto;margin-right:0;padding-left:0;padding-right:4px;order:-1}[dir=rtl] .mdc-form-field--align-end>label,.mdc-form-field--align-end>label[dir=rtl]{margin-left:0;margin-right:auto}[dir=rtl] .mdc-form-field--align-end>label,.mdc-form-field--align-end>label[dir=rtl]{padding-left:4px;padding-right:0}.mdc-form-field--space-between{justify-content:space-between}.mdc-form-field--space-between>label{margin:0}[dir=rtl] .mdc-form-field--space-between>label,.mdc-form-field--space-between>label[dir=rtl]{margin:0}.mdc-form-field{font-family:var(--mdc-form-field-label-text-font);line-height:var(--mdc-form-field-label-text-line-height);font-size:var(--mdc-form-field-label-text-size);font-weight:var(--mdc-form-field-label-text-weight);letter-spacing:var(--mdc-form-field-label-text-tracking);color:var(--mdc-form-field-label-text-color)}.mat-internal-form-field{-moz-osx-font-smoothing:grayscale;-webkit-font-smoothing:antialiased}"]
+    }]
+  }], null, {
+    labelPosition: [{
+      type: Input,
+      args: [{
+        required: true
+      }]
+    }]
+  });
+})();
 
 export {
   Platform,
+  RtlScrollAxisType,
   supportsScrollBehavior,
   getRtlScrollAxisType,
   _getEventTarget,
@@ -5208,24 +5138,12 @@ export {
   Directionality,
   BidiModule,
   MatCommonModule,
-  mixinDisabled,
-  mixinColor,
-  mixinDisableRipple,
-  mixinTabIndex,
-  mixinErrorState,
+  _ErrorStateTracker,
   ErrorStateMatcher,
   MAT_RIPPLE_GLOBAL_OPTIONS,
   MatRipple,
   MatRippleModule,
-  MatRippleLoader
+  MatRippleLoader,
+  _MatInternalFormField
 };
-/*! Bundled license information:
-
-@angular/platform-browser/fesm2022/animations.mjs:
-  (**
-   * @license Angular v17.3.12
-   * (c) 2010-2024 Google LLC. https://angular.io/
-   * License: MIT
-   *)
-*/
-//# sourceMappingURL=chunk-IMZILDRE.js.map
+//# sourceMappingURL=chunk-DHPSVXZE.js.map

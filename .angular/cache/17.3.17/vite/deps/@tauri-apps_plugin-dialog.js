@@ -1,11 +1,28 @@
 import {
   invoke
-} from "./chunk-XEW3DY3V.js";
+} from "./chunk-GWGCYHGC.js";
 import {
   __async
 } from "./chunk-WDMUDEB6.js";
 
 // node_modules/@tauri-apps/plugin-dialog/dist-js/index.js
+function buttonsToRust(buttons) {
+  if (buttons === void 0) {
+    return void 0;
+  }
+  if (typeof buttons === "string") {
+    return buttons;
+  } else if ("ok" in buttons && "cancel" in buttons) {
+    return { OkCancelCustom: [buttons.ok, buttons.cancel] };
+  } else if ("yes" in buttons && "no" in buttons && "cancel" in buttons) {
+    return {
+      YesNoCancelCustom: [buttons.yes, buttons.no, buttons.cancel]
+    };
+  } else if ("ok" in buttons) {
+    return { OkCustom: buttons.ok };
+  }
+  return void 0;
+}
 function open() {
   return __async(this, arguments, function* (options = {}) {
     if (typeof options === "object") {
@@ -22,39 +39,47 @@ function save() {
     return yield invoke("plugin:dialog|save", { options });
   });
 }
+function messageCommand(message2, options) {
+  return __async(this, null, function* () {
+    return yield invoke("plugin:dialog|message", {
+      message: message2,
+      title: options?.title,
+      kind: options?.kind,
+      buttons: buttonsToRust(options?.buttons)
+    });
+  });
+}
 function message(message2, options) {
   return __async(this, null, function* () {
     const opts = typeof options === "string" ? { title: options } : options;
-    yield invoke("plugin:dialog|message", {
-      message: message2.toString(),
-      title: opts?.title?.toString(),
-      kind: opts?.kind,
-      okButtonLabel: opts?.okLabel?.toString()
-    });
+    if (opts && !opts.buttons && opts.okLabel) {
+      opts.buttons = { ok: opts.okLabel };
+    }
+    return messageCommand(message2, opts);
   });
 }
 function ask(message2, options) {
   return __async(this, null, function* () {
     const opts = typeof options === "string" ? { title: options } : options;
-    return yield invoke("plugin:dialog|ask", {
-      message: message2.toString(),
-      title: opts?.title?.toString(),
+    const customButtons = opts?.okLabel || opts?.cancelLabel;
+    const okLabel = opts?.okLabel ?? "Yes";
+    return (yield messageCommand(message2, {
+      title: opts?.title,
       kind: opts?.kind,
-      yesButtonLabel: opts?.okLabel?.toString(),
-      noButtonLabel: opts?.cancelLabel?.toString()
-    });
+      buttons: customButtons ? { ok: okLabel, cancel: opts.cancelLabel ?? "No" } : "YesNo"
+    })) === okLabel;
   });
 }
 function confirm(message2, options) {
   return __async(this, null, function* () {
     const opts = typeof options === "string" ? { title: options } : options;
-    return yield invoke("plugin:dialog|confirm", {
-      message: message2.toString(),
-      title: opts?.title?.toString(),
+    const customButtons = opts?.okLabel || opts?.cancelLabel;
+    const okLabel = opts?.okLabel ?? "Ok";
+    return (yield messageCommand(message2, {
+      title: opts?.title,
       kind: opts?.kind,
-      okButtonLabel: opts?.okLabel?.toString(),
-      cancelButtonLabel: opts?.cancelLabel?.toString()
-    });
+      buttons: customButtons ? { ok: okLabel, cancel: opts.cancelLabel ?? "Cancel" } : "OkCancel"
+    })) === okLabel;
   });
 }
 export {

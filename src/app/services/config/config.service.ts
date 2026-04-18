@@ -73,7 +73,7 @@ export class ConfigService {
 
   /* ============================================================================================ */
   getCommonFileTypes(): string[] {
-    return ['html', 'htm', 'js', 'jsx', 'ts', 'tsx', 'vue', 'svelte', 'php', 'rs'];
+    return ['html', 'htm', 'js', 'jsx', 'ts', 'tsx', 'vue', 'svelte', 'php', 'rs', 'razor'];
   }
 
   /* ============================================================================================ */

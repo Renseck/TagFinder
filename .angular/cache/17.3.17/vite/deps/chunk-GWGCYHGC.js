@@ -62,7 +62,7 @@ var Channel = class {
     });
   }
   cleanupCallback() {
-    Reflect.deleteProperty(window, `_${this.id}`);
+    window.__TAURI_INTERNALS__.unregisterCallback(this.id);
   }
   set onmessage(handler) {
     __classPrivateFieldSet(this, _Channel_onmessage, handler, "f");
@@ -95,7 +95,16 @@ var PluginListener = class {
 function addPluginListener(plugin, event, cb) {
   return __async(this, null, function* () {
     const handler = new Channel(cb);
-    return invoke(`plugin:${plugin}|registerListener`, { event, handler }).then(() => new PluginListener(plugin, event, handler.id));
+    try {
+      yield invoke(`plugin:${plugin}|register_listener`, {
+        event,
+        handler
+      });
+      return new PluginListener(plugin, event, handler.id);
+    } catch {
+      yield invoke(`plugin:${plugin}|registerListener`, { event, handler });
+      return new PluginListener(plugin, event, handler.id);
+    }
   });
 }
 function checkPermissions(plugin) {
@@ -154,4 +163,4 @@ export {
   Resource,
   isTauri
 };
-//# sourceMappingURL=chunk-XEW3DY3V.js.map
+//# sourceMappingURL=chunk-GWGCYHGC.js.map
